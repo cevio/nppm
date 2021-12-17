@@ -1,0 +1,22 @@
+{
+  "packages": [
+    "packages/*"
+  ],
+  "version": "independent",
+  "npmClient": "npc",
+  "command": {
+    "bootstrap": {
+      "hoist": true,
+      "noCi": true,
+      "npmClientArgs": [
+        "--no-package-lock"
+      ]
+    },
+    "publish": {
+      "ignoreChanges": [
+        "*.md"
+      ],
+      "registry": "http://npm.znrank.com/"
+    }
+  }
+}
