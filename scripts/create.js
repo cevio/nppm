@@ -66,13 +66,13 @@ function createPackageFile(dir, project, bin) {
   const template = {
     "name": "@nppm/" + project,
     "version": "1.0.0",
-    "description": "spider " + project + " module",
+    "description": "node private package manager:" + project,
     "author": "shenyunjie ",
-    "homepage": "http://gitlab.znrank.net/spider/scheduler.git",
+    "homepage": "https://github.com/cevio/nppm/tree/master/packages/" + project,
     "license": "MIT",
     "main": "dist/index.js",
     "keywords": [
-      "spider"
+      "npm"
     ],
     "directories": {
       "lib": "src"
@@ -92,21 +92,21 @@ function createPackageFile(dir, project, bin) {
       [project]: "./dist/bin.js"
     }
     template.dependencies = {
-      "@node/com.toolkit": "^1.0.3",
+      "@nppm/toolkit": "^1.0.0",
     }
   }
   fs.writeFileSync(path.resolve(dir, 'package.json'), JSON.stringify(template, null, 2), 'utf8');
 }
 
 function createReadme(dir, project) {
-  const template = `# \`@node/${project}\`
+  const template = `# \`@nppm/${project}\`
 
   > TODO: description
   
   ## Usage
   
   \`\`\`
-  const container = require('@node/${project}');
+  const container = require('@nppm/${project}');
   
   // TODO: DEMONSTRATE API
   \`\`\``;
@@ -120,6 +120,5 @@ function createDir(dir, name) {
 }
 
 function createIndexFile(src, project) {
-  const name = project[0].toUpperCase() + project.substring(1);
   fs.writeFileSync(path.resolve(src, 'index.ts'), `export const abc = 1;`, 'utf8');
 }
