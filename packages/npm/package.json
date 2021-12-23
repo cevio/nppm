@@ -1,0 +1,46 @@
+{
+  "name": "@nppm/npm",
+  "version": "1.0.0",
+  "description": "node private package manager:npm",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/npm",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nppm/entity": "^1.0.0",
+    "@nppm/process": "^1.0.0",
+    "@nppm/radox": "^1.0.0",
+    "@nppm/toolkit": "^1.0.0",
+    "@types/gravatar": "^1.8.3",
+    "@types/koa": "^2.13.4",
+    "@types/koa-bodyparser": "^4.3.4",
+    "@types/minimist": "^1.2.2",
+    "@types/randomstring": "^1.1.8",
+    "@types/sha1": "^1.1.3",
+    "gravatar": "^1.8.2",
+    "ioredis": "^4.28.2",
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "koa-router-find-my-way": "^5.0.0",
+    "log4js": "^6.3.0",
+    "minimist": "^1.2.5",
+    "path-to-regexp": "^6.2.0",
+    "randomstring": "^1.2.1",
+    "sha1": "^1.1.1"
+  }
+}

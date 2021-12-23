@@ -16,7 +16,7 @@
       "ignoreChanges": [
         "*.md"
       ],
-      "registry": "http://npm.znrank.com/"
+      "registry": "https://npm.baizhun.cn"
     }
   }
 }

@@ -21,6 +21,6 @@ export function createProcess<P extends minimist.ParsedArgs>(logger: Logger, err
       },
       reject: error,
     })
-  }).catch(e => lifecycle.rollback().then(() => error(e)).then(() => callback && callback(schema)).finally(() => process.exit(0)));
+  }).then(() => callback && callback(schema)).catch(e => lifecycle.rollback().then(() => error(e)).finally(() => process.exit(0)));
   return [bootstrap, lifecycle] as const;
 }

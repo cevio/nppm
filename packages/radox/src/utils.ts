@@ -1,4 +1,4 @@
-export function diff(a: string[], b: string[]) {
+export function diff<T>(a: T[], b: T[]) {
   const removes = [];
   const commons = [];
   

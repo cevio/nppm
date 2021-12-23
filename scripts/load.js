@@ -10,8 +10,7 @@ const pkgPath = path.resolve(__dirname, '..', 'packages', pkg, 'src', file || 'i
 if (!fs.existsSync(pkgPath)) throw new Error('找不到项目启动文件：' + pkgPath);
 
 const { spawnSync } = require('child_process');
-
-spawnSync('ts-node', [pkgPath, ...params], {
+spawnSync('ts-node', [pkgPath, ...params.map(p => '--' + p)], {
   cwd: path.dirname(pkgPath),
   stdio: 'inherit',
 });

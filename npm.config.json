@@ -1,0 +1,19 @@
+{
+  "dev": true,
+  "port": 3000,
+  "zookeeper": "127.0.0.1:2181",
+  "orm": {
+    "type": "mysql",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "username": "root",
+    "password": "fdnsyj211314",
+    "database": "npm"
+  },
+  "redis": {
+    "port": 16739,
+    "host": "192.168.31.202",
+    "password": "Xcj!202011",
+    "db": 2
+  }
+}
