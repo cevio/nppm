@@ -1,11 +1,10 @@
-import { Service, Public } from '@nppm/radox';
-import { ORMContext, RedisContext } from '../effects';
-import { ConfigCacheAble } from '../cache';
-import { Exception } from '@nppm/toolkit';
+import { Service, Public } from '@typeservice/radox';
+import { ORMContext, RedisContext, RadoxContext } from '../effects';
+import { ConfigCacheAble, UserCacheAble } from '../cache';
+import { Exception } from '@typeservice/exception';
 import { inject } from 'inversify';
 import { HttpService } from './http';
 import { resolve } from 'url';
-import { Worker } from '@nppm/process';
 import { UserEntity } from '@nppm/entity';
 import { generate } from 'randomstring';
 import { url } from 'gravatar';
@@ -15,7 +14,7 @@ export class UserService {
   @inject(HttpService) private readonly HttpService: HttpService;
 
   get radox() {
-    return Worker.radox.value;
+    return RadoxContext.value;
   }
 
   get connection() {
@@ -78,7 +77,7 @@ export class UserService {
       const repository = this.connection.getRepository(UserEntity);
       let user = await repository.findOne({ account: data.account });
       if (user) {
-        if (user.login_forbiden) return { code: 500, msg: '禁止登录' }
+        if (user.login_forbiden) return { code: 401, msg: '禁止登录' }
         user.avatar = data.avatar;
         user.email = data.email;
         user.nickname = data.nickname;
@@ -100,6 +99,7 @@ export class UserService {
       }
       const _user = await repository.save(user);
       await this.redis.set('npm:user:Bearer:' + data.token, JSON.stringify(_user));
+      await UserCacheAble.build({ id: _user.id });
       return { code: 200, data }
     }
     
@@ -139,6 +139,7 @@ export class UserService {
     }
     const _user = await User.save(user);
     await this.redis.set('npm:user:Basic:' + Buffer.from(account + ':' + password).toString('base64'), JSON.stringify(_user));
+    await UserCacheAble.build({ id: _user.id });
     return 0;
   }
 

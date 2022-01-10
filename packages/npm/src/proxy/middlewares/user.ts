@@ -1,7 +1,7 @@
 import { Context, Next } from 'koa';
 import { UserEntity } from '@nppm/entity';
 import { RedisContext } from '../../effects';
-import { Exception } from '@nppm/toolkit';
+import { Exception } from '@typeservice/exception';
 
 export interface UserContext extends Context {
   user?: UserEntity
@@ -14,12 +14,12 @@ export async function UserMiddleware(ctx: UserContext, next: Next) {
   const redis = RedisContext.value;
   const key = 'npm:user:' + sp.join(':');
   if (!(await redis.exists(key))) return await next();
-  ctx.user = JSON.parse(await redis.get(key));
+  ctx.state.user = JSON.parse(await redis.get(key));
   await next();
 }
 
 export async function LoginedMiddleware(ctx: UserContext, next: Next) {
-  if (!ctx.user) throw new Exception(401, '未登录的用户');
-  if (!ctx.user.login_forbiden) throw new Exception(403, '用户禁止登录');
+  if (!ctx.state.user) throw new Exception(401, '未登录的用户');
+  if (!ctx.state.user.login_forbiden) throw new Exception(403, '用户禁止登录');
   await next();
 }

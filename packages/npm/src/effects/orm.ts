@@ -1,5 +1,5 @@
 import { ConfigContext } from './config';
-import { createContext } from '@nppm/process';
+import { createContext } from '@typeservice/process';
 import { createORMServer, closeORMServer } from '@nppm/entity';
 import { ConfigCacheAble } from '../cache';
 

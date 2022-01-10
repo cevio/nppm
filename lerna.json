@@ -3,7 +3,6 @@
     "packages/*"
   ],
   "version": "independent",
-  "npmClient": "npc",
   "command": {
     "bootstrap": {
       "hoist": true,
@@ -15,8 +14,7 @@
     "publish": {
       "ignoreChanges": [
         "*.md"
-      ],
-      "registry": "https://npm.baizhun.cn"
+      ]
     }
   }
 }

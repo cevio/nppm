@@ -11,48 +11,56 @@ export class UserEntity {
   @Column({
     type: 'varchar',
     length: 255,
-    comment: '用户登入账号，在同一种登录类型下必须唯一'
+    comment: '用户登入账号，在同一种登录类型下必须唯一',
+    nullable: false
   })
   public account: string;
 
   @Column({
     type: 'varchar',
     length: 255,
-    comment: '昵称'
+    comment: '昵称',
+    nullable: true,
   })
   public nickname: string;
 
   @Column({
     type: 'varchar',
     length: 255,
-    comment: '邮箱'
+    comment: '邮箱',
+    nullable: false,
   })
   public email: string;
 
   @Column({
     type: 'varchar',
     length: 255,
-    comment: '来源类型，即登录插件码'
+    comment: '来源类型，即登录插件码',
+    default: 'default',
+    nullable: true,
   })
   public login_code: string;
 
   @Column({
     type: 'text',
-    comment: '头像'
+    comment: '头像',
+    nullable: true,
   })
   public avatar: string;
 
   @Column({
     type: 'varchar',
     length: 5,
-    comment: '加盐'
+    comment: '加盐',
+    nullable: true,
   })
   public salt: string;
 
   @Column({
     type: 'varchar',
     length: 40,
-    comment: '密码编码'
+    comment: '密码编码',
+    nullable: true,
   })
   public password: string;
 
@@ -66,6 +74,7 @@ export class UserEntity {
   @Column({
     type: 'json',
     comment: '允许入库的包前缀',
+    nullable: true,
   })
   public scopes: string[];
 

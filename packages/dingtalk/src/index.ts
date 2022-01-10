@@ -1,39 +1,27 @@
-import { createProcess, Worker } from '@nppm/process';
-import { configure, getLogger } from 'log4js';
+import { createProcess, createContext } from '@typeservice/process';
 import { DingTalkService } from './service';
-import { Port } from '@nppm/toolkit';
+import { Port, logger } from './util';
+import { Radox } from '@typeservice/radox';
+import { Container } from 'inversify';
 
 const pkg = require('../package.json');
+const container = new Container();
+const [bootstrap, lifecycle] = createProcess(e => logger.error(e));
 
-configure({
-  pm2: false,
-  appenders: {
-    console: {
-      type: 'stdout',
-    }
-  },
-  categories: {
-    default: {
-      appenders: ['console'],
-      level: 'info'
-    },
-  }
-});
+export const RadoxContext = createContext<Radox>();
 
-export const logger = getLogger();
-
-const [bootstrap, lifecycle] = createProcess(logger, e => logger.error(e));
-
-lifecycle.use(async () => {
+lifecycle.createServer(async () => {
   const port = await Port.check(Port.range(10000, 20000));
-  return Worker({
-    port,
-    services: [DingTalkService],
+  const radox = new Radox({
+    port, container, logger,
     zookeeper: '127.0.0.1:2181',
-    logger
-  })
-}).use(async () => {
-  const radox = Worker.radox.value;
+  });
+  RadoxContext.setContext(radox);
+  radox.define(DingTalkService);
+  await radox.listen();
+  return () => radox.close();
+}).createServer(async () => {
+  const radox = RadoxContext.value;
 
   await Promise.all([
     radox.sendback({
@@ -80,4 +68,4 @@ lifecycle.use(async () => {
   }
 })
 
-bootstrap(() => logger.warn('DINGTALK PLUGIN STARTED.'));
+bootstrap().then(() => logger.warn('DINGTALK PLUGIN STARTED.'));

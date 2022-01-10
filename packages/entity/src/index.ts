@@ -3,11 +3,21 @@ import { createConnection, ConnectionOptions, Connection } from 'typeorm';
 import { ConfigEntity } from './ConfigEntity';
 import { UserEntity } from './UserEntity';
 import { PackageEntity } from './PackageEntity';
+import { VersionEntity } from './VersionEntity';
+import { TagEntity } from './TagEntity';
+import { MaintainerEntity } from './MaintainerEntity';
+import { KeywordEntity } from './KeywordEntity';
+import { DependencyEntity } from './DependencyEntity';
 
 export {
   ConfigEntity,
   UserEntity,
   PackageEntity,
+  VersionEntity,
+  TagEntity,
+  MaintainerEntity,
+  KeywordEntity,
+  DependencyEntity,
 }
 
 export interface TORMConfigs {
@@ -26,6 +36,12 @@ export function createORMServer(options: TORMConfigs, synchronize?: boolean) {
     entities: [
       ConfigEntity,
       UserEntity,
+      PackageEntity,
+      VersionEntity,
+      TagEntity,
+      MaintainerEntity,
+      KeywordEntity,
+      DependencyEntity,
     ],
   }) as ConnectionOptions;
   return createConnection(configs);

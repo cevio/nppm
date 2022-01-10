@@ -1,16 +1,15 @@
-import { createProcess } from '@nppm/process';
+import { createProcess } from '@typeservice/process';
 import { logger } from './util';
-import { createWorker, createConfigs, createHttpServer, ORM, Redis, BizRouter } from './effects';
+import { createWorker, createConfigs, createHttpServer, ORM, Redis } from './effects';
 import { TSchema } from './interface';
 
-const [bootstrap, lifecycle] = createProcess<TSchema>(logger, e => logger.error(e));
+const [bootstrap, lifecycle] = createProcess<TSchema>(e => logger.error(e));
 
 lifecycle
-  .use(createConfigs)
-  .use(createWorker)
-  .use(createHttpServer)
-  .use(Redis)
-  .use(ORM)
-  .use(BizRouter);
+  .createServer(createConfigs)
+  .createServer(createWorker)
+  .createServer(createHttpServer)
+  .createServer(Redis)
+  .createServer(ORM);
 
-bootstrap(() => logger.warn('NPPM REGISTRY STARTED.'));
+bootstrap().then(() => logger.warn('NPPM REGISTRY STARTED.'));

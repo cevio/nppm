@@ -1,10 +1,10 @@
-import { Service, Public } from '@nppm/radox';
-import { Worker } from '@nppm/process';
+import { Service, Public } from '@typeservice/radox';
 import { resolve } from 'url';
 import axios, { AxiosResponse } from 'axios';
-import { Exception } from '@nppm/toolkit';
+import { Exception } from '@typeservice/exception';
 import { createHmac } from 'crypto';
 import { TUserID, TAccessToken, TOpenID, TUserInfo, TResult } from './interface';
+import { RadoxContext } from '.';
 
 @Service('com.nppm.login.dingtalk.service')
 export class DingTalkService {
@@ -16,7 +16,7 @@ export class DingTalkService {
   private readonly stacks = new Map<string, { status: number, data: TResult, msg: string, timer: NodeJS.Timer }>();
 
   get radox() {
-    return Worker.radox.value;
+    return RadoxContext.value;
   }
 
   @Public()

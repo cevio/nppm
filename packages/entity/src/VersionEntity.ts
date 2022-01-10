@@ -3,9 +3,10 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 @Entity({ name: 'npm_versions' })
 @Index(['uid'])
 @Index(['pid'])
+@Index(['code'])
 @Index(['gmt_create'])
 @Index(['gmt_modified'])
-export class PackageEntity {
+export class VersionEntity {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -36,7 +37,7 @@ export class PackageEntity {
   public description: string;
 
   @Column({
-    type: 'text',
+    type: 'json',
     comment: '主页'
   })
   public homepage: string;
@@ -88,6 +89,13 @@ export class PackageEntity {
 
   @Column({
     type: 'varchar',
+    default: 100,
+    comment: '文件类型'
+  })
+  public attachment_type: number;
+
+  @Column({
+    type: 'varchar',
     length: 100,
     comment: '版本字符串ID'
   })
@@ -95,7 +103,8 @@ export class PackageEntity {
 
   @Column({
     type: 'text',
-    comment: '废弃内容'
+    comment: '废弃内容',
+    nullable: true
   })
   public deprecated: string
 

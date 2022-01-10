@@ -1,5 +1,5 @@
 import ioRedis from 'ioredis';
-import { createContext } from '@nppm/process';
+import { createContext } from '@typeservice/process';
 import { ConfigContext } from './config';
 
 export const RedisContext = createContext<ioRedis.Redis>();

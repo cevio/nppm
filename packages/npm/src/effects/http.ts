@@ -1,21 +1,23 @@
-import * as Router from 'koa-router-find-my-way';
 import * as bodyParser from 'koa-bodyparser';
-import Koa, { Context, Next } from 'koa';
+import { Context, Next } from 'koa';
 import { TSchema } from '../interface';
 import { createServer, Server } from 'http';
-import { createContext } from '@nppm/process';
+import { createContext } from '@typeservice/process';
 import { logger } from '../util';
 import { ConfigContext } from './config';
-import { Exception } from '@nppm/toolkit';
+import { HTTP } from '@typeservice/http';
+import { container } from '../container';
+import { HttpException } from '@typeservice/exception';
+import { HttpProxyServices } from '../proxy';
 
-export const HttpRouteContext = createContext<Router.Instance>();
 export const HttpServerContext = createContext<Server>();
-export const ApplicationContext = createContext<Koa>();
+export const ApplicationContext = createContext<HTTP>();
 export async function createHttpServer(schema: TSchema) {
   const port = Number(schema.port || ConfigContext.value.port || 9603);
-  const app = new Koa();
-  const router = Router();
-  app.use(bodyParser());
+  const app = new HTTP(container);
+  app.use(bodyParser({
+    jsonLimit: '500mb'
+  }));
   if (schema.dev || ConfigContext.value.dev) {
     app.use(async (ctx, next) => {
       const session = ctx.headers['npm-session'];
@@ -23,6 +25,8 @@ export async function createHttpServer(schema: TSchema) {
       const pathname = ctx.request.path;
       console.log('-----------------------');
       console.log('session', session);
+      console.log('npm-command', ctx.header['npm-command']);
+      console.log('referer', ctx.header.referer);
       console.log('authorization', ctx.header['authorization']);
       console.log('method', method);
       console.log('pathname', pathname);
@@ -32,7 +36,8 @@ export async function createHttpServer(schema: TSchema) {
     })
   }
   app.use(ErrorCatch);
-  app.use(router.routes());
+  HttpProxyServices.forEach(service => app.createService(service));
+  app.use(app.routes());
   const server = createServer(app.callback());
   server.setTimeout(0);
   await new Promise<void>((resolve, reject) => {
@@ -41,7 +46,6 @@ export async function createHttpServer(schema: TSchema) {
       resolve();
     })
   })
-  HttpRouteContext.setContext(router);
   HttpServerContext.setContext(server);
   ApplicationContext.setContext(app);
   logger.warn('HTTP start on port:', port)
@@ -54,16 +58,16 @@ async function ErrorCatch(ctx: Context, next: Next) {
   try{
     await next();
   } catch (e) {
-    if (e instanceof Exception) {
-      ctx.status = e.code;
+    if (e instanceof HttpException) {
+      ctx.status = e.status;
       ctx.body = {
-        error: 'ECODE:' + e.code,
+        error: e.code,
         reason: e.message,
       }
     } else {
-      ctx.status = 500;
+      ctx.status = 503;
       ctx.body = {
-        error: 'ECODE:500',
+        error: 'SERVICE_UNAVAILABLE',
         reason: e.message,
       }
     }

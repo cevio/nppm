@@ -1,8 +1,7 @@
-import { Service, Public } from '@nppm/radox';
-import { Worker } from '@nppm/process';
-import { ConfigContext, HttpRouteContext } from '../effects';
+import { Service, Public } from '@typeservice/radox';
+import { ConfigContext, ApplicationContext, RadoxContext } from '../effects';
 import { HTTPMethod } from 'find-my-way';
-import { Exception } from '@nppm/toolkit';
+import { Exception } from '@typeservice/exception';
 
 interface THttpRouterRegister {
   HttpMethod: HTTPMethod,
@@ -22,11 +21,11 @@ export class HttpService {
   public readonly logins = new Map<string, { auth: TLoginState, check: TLoginState }>();
 
   get radox() {
-    return Worker.radox.value;
+    return RadoxContext.value;
   }
 
   get route() {
-    return HttpRouteContext.value;
+    return ApplicationContext.value;
   }
 
   static encodeHttpRouteId(HttpMethod: HTTPMethod, HttpRouter: string) {
@@ -38,20 +37,21 @@ export class HttpService {
     routes.forEach(state => {
       const encodeID = HttpService.encodeHttpRouteId(state.HttpMethod, state.HttpRouter);
       if (!this.routes.has(encodeID)) {
-        this.route.on(state.HttpMethod, state.HttpRouter, async ctx => {
+        this.route.addController(state.HttpMethod, state.HttpRouter, async ctx => {
           const res = await this.radox.sendback({
             command: state.RPCNamespace,
             method: state.RPCMethod,
             arguments: [{
               query: ctx.query,
               params: ctx.params,
-              body: ctx.request.body
+              body: ctx.request.body,
+              headers: ctx.headers,
             }]
           })
           ctx.body = res;
         })
         this.routes.set(encodeID, {
-          off: () => this.route.off(state.HttpMethod, state.HttpRouter),
+          off: () => this.route.removeController(state.HttpMethod, state.HttpRouter),
           idents: new Set(),
         });
       }

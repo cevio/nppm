@@ -29,7 +29,6 @@ export class PackageEntity {
   @Column({
     type: 'varchar',
     length: 101,
-    unique: true,
     comment: '包'
   })
   public pathname: string;
@@ -59,7 +58,14 @@ export class PackageEntity {
     default: true,
     comment: '是否私有包'
   })
-  public isPrivate: boolean;
+  public is_private: boolean;
+
+  @Column({
+    type: 'varchar',
+    length: 32,
+    comment: '对外唯一字符串'
+  })
+  public rev: string;
 
   @Column({
     type: 'timestamp',

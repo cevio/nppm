@@ -25,4 +25,10 @@ export class ConfigEntity {
     default: 'default',
   })
   public login_code: string;
+
+  @Column({
+    type: 'json',
+    comment: '支持的registry列表',
+  })
+  public registries: string[];
 }
