@@ -1,11 +1,11 @@
-# `@nppm/dingtalk`
+# `@nppm/utils`
 
   > TODO: description
   
   ## Usage
   
   ```
-  const container = require('@nppm/dingtalk');
+  const container = require('@nppm/utils');
   
   // TODO: DEMONSTRATE API
   ```

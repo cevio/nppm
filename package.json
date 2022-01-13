@@ -8,7 +8,8 @@
     "build": "lerna run build",
     "load": "node scripts/load.js",
     "npm": "npm run load npm index.ts config=../../../npm.config.json",
-    "dingtalk": "npm run load dingtalk"
+    "dingtalk": "npm run load dingtalk",
+    "setup": "NODE_ENV=development npm run load setup"
   },
   "devDependencies": {
     "inquirer": "^8.1.0",

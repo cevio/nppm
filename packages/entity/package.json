@@ -22,12 +22,6 @@
     "access": "public"
   },
   "dependencies": {
-    "mssql": "^7.3.0",
-    "mysql2": "^2.3.3",
-    "oracledb": "^5.3.0",
-    "pg": "^8.7.1",
-    "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.41",
-    "mongodb": "^3.6.0"
+    "@nppm/utils": "^1.0.0"
   }
 }

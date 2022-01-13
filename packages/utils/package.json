@@ -1,0 +1,48 @@
+{
+  "name": "@nppm/utils",
+  "version": "1.0.0",
+  "description": "node private package manager:utils",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/utils",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/detect-port": "^1.3.2",
+    "@types/ioredis": "^4.28.7",
+    "@types/koa": "^2.13.4",
+    "@types/koa-bodyparser": "^4.3.5",
+    "@typeservice/exception": "^1.0.1",
+    "@typeservice/http": "1.0.4",
+    "@typeservice/process": "1.0.4",
+    "@typeservice/radox": "^1.0.2",
+    "@vue/reactivity": "^3.2.26",
+    "detect-port": "^1.3.0",
+    "inversify": "^6.0.1",
+    "ioredis": "^4.28.3",
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "log4js": "^6.3.0",
+    "mongodb": "^3.6.0",
+    "mssql": "^7.3.0",
+    "mysql2": "^2.3.3",
+    "oracledb": "^5.3.0",
+    "pg": "^8.7.1",
+    "sqlite3": "^5.0.2",
+    "typeorm": "^0.2.41"
+  }
+}

@@ -23,3 +23,5 @@ package-lock.json
 test.json
 lerna-debug.log
 node_packages
+*.log
+*.zip
