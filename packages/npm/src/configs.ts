@@ -4,9 +4,9 @@ import { TConfigs } from './interface';
 import { createContext } from '@typeservice/process';
 import { createDefaultORMState, createDefaultRedisState, setORMState, setRedisState, TORMConfigs, TCreateRedisServerProps } from '@nppm/utils';
 const CONFIG_FILENAME = 'nppm-configs.json';
+const configFile = resolve(process.env.HOME, CONFIG_FILENAME);
 export const CONFIGS = createContext(createDefaultConfigState());
 export function createConfigServer() {
-  const configFile = resolve(process.env.HOME, CONFIG_FILENAME);
   if (!existsSync(configFile)) {
     writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
   } else {
@@ -23,15 +23,13 @@ export function createDefaultConfigState(): TConfigs {
 }
 
 export function updateORMState(state: TORMConfigs) {
-  const configFile = resolve(process.env.HOME, CONFIG_FILENAME);
-  setORMState(state);
   CONFIGS.value.orm = state;
   writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
+  setORMState(state);
 }
 
 export function updateRedisState(state: TCreateRedisServerProps) {
-  const configFile = resolve(process.env.HOME, CONFIG_FILENAME);
-  setRedisState(state);
   CONFIGS.value.redis = state;
   writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
+  setRedisState(state);
 }
