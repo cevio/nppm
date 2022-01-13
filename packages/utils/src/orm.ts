@@ -92,3 +92,14 @@ export function createORMAsyncServer(props: TCreateORMServerProps, done: () => v
     ORM_CONNECTION_CONTEXT.setContext(connection);
   }).catch(e => logger.error(e)).finally(done);
 }
+
+export function createDefaultORMState(): TORMConfigs {
+  return {
+    type: null,
+    host: null,
+    port: 0,
+    username: null,
+    password: null,
+    database: null,
+  }
+}

@@ -80,3 +80,12 @@ export function createRedisAsyncServer(props: TCreateRedisServerProps, done: () 
     done();
   })
 }
+
+export function createDefaultRedisState(): TCreateRedisServerProps {
+  return {
+    host: null,
+    port: 0,
+    password: null,
+    db: 0,
+  }
+}
