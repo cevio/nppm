@@ -1,5 +1,7 @@
+import HttpServices from './http';
 import { TSchema } from './interface';
 import { createSchemaServer } from './schema';
+import { createErrorCatchMiddleware } from './error';
 import { createConfigServer, CONFIGS } from './configs';
 import { createProcess, localhost } from '@typeservice/process';
 import { logger, createHttpServer, createRadoxServer, createORMObserver, createRedisObserver, isProduction } from '@nppm/utils';
@@ -17,8 +19,8 @@ lifecycle
   .createServer(createHttpServer({
     port: Number(schema.port),
     jsonLimit: '500mb',
-    middlewares: [],
-    services: []
+    middlewares: [createErrorCatchMiddleware],
+    services: HttpServices,
   }))
   .createServer(() => createORMObserver({
     synchronize: !isProduction,

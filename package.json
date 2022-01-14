@@ -7,7 +7,7 @@
     "create": "node scripts/create.js",
     "build": "lerna run build",
     "load": "node scripts/load.js",
-    "npm": "NODE_ENV=development npm run load npm index.ts -- --port 8642 --zookeeper 192.168.31.202:2181",
+    "npm": "NODE_ENV=development npm run load npm index.ts -- --port 3000 --zookeeper 127.0.0.1:2181",
     "dingtalk": "npm run load dingtalk",
     "setup": "NODE_ENV=development npm run load setup"
   },

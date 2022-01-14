@@ -24,8 +24,11 @@
   "dependencies": {
     "@nppm/entity": "^1.0.0",
     "@nppm/utils": "^1.0.0",
+    "@types/gravatar": "^1.8.3",
     "@types/minimist": "^1.2.2",
-    "@typeservice/process": "^1.0.4",
-    "minimist": "^1.2.5"
+    "@types/randomstring": "^1.1.8",
+    "gravatar": "^1.8.2",
+    "minimist": "^1.2.5",
+    "randomstring": "^1.2.1"
   }
 }

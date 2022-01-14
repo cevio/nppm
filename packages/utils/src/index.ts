@@ -6,3 +6,4 @@ export * from './env';
 export * from './logger';
 export * from './orm';
 export * from './redis';
+export * from './cache';

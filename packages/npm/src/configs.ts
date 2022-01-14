@@ -26,10 +26,22 @@ export function updateORMState(state: TORMConfigs) {
   CONFIGS.value.orm = state;
   writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
   setORMState(state);
+  return () => {
+    const value: TORMConfigs = createDefaultORMState();
+    CONFIGS.value.orm = value;
+    writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
+    setORMState(value);
+  }
 }
 
 export function updateRedisState(state: TCreateRedisServerProps) {
   CONFIGS.value.redis = state;
   writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
   setRedisState(state);
+  return () => {
+    const value: TCreateRedisServerProps = createDefaultRedisState();
+    CONFIGS.value.redis = value;
+    writeFileSync(configFile, JSON.stringify(CONFIGS.value), 'utf8');
+    setRedisState(value);
+  }
 }
