@@ -1,11 +1,11 @@
-import { CacheAble, ORM_CONNECTION_CONTEXT } from '@nppm/utils';
+import { CacheAble } from '@nppm/utils';
 import { ConfigEntity } from '@nppm/entity';
+import { Connection } from 'typeorm';
 
-export const ConfigCacheAble = new CacheAble<ConfigEntity>({
+export const ConfigCacheAble = new CacheAble<ConfigEntity, [Connection]>({
   memory: true,
   path: '/configs',
-  async handler() {
-    const connection = ORM_CONNECTION_CONTEXT.value;
+  async handler(args, connection) {
     const entity = connection.manager.getRepository(ConfigEntity);
     return {
       data: await entity.findOne(),

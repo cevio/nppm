@@ -22,6 +22,8 @@
     "access": "public"
   },
   "dependencies": {
+    "@nppm/cache": "^1.0.0",
+    "@nppm/core": "^1.0.0",
     "@nppm/entity": "^1.0.0",
     "@nppm/utils": "^1.0.0",
     "@types/gravatar": "^1.8.3",
@@ -29,6 +31,7 @@
     "@types/randomstring": "^1.1.8",
     "gravatar": "^1.8.2",
     "minimist": "^1.2.5",
-    "randomstring": "^1.2.1"
+    "randomstring": "^1.2.1",
+    "sha1": "^1.1.1"
   }
 }

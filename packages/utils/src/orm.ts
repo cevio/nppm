@@ -42,13 +42,14 @@ export const ORM_PORT = ref<TORMConfigs['port']>();
 export const ORM_USERNAME = ref<TORMConfigs['username']>();
 export const ORM_PASSWORD = ref<TORMConfigs['password']>();
 export const ORM_DATABASE = ref<TORMConfigs['database']>();
+export const ORM_TIMESTAMP = ref<number>(Date.now());
 
 export function createORMObserver(props: TCreateORMServerProps) {
   const doing = createContext(false);
   setORMState(props.configs);
   return () => {
     const stopEffect = effect(() => {
-      if (ORM_TYPE.value && ORM_HOST.value && ORM_PORT.value && ORM_USERNAME.value && ORM_PASSWORD.value && ORM_DATABASE.value) {
+      if (ORM_TYPE.value && ORM_HOST.value && ORM_PORT.value && ORM_USERNAME.value && ORM_PASSWORD.value && ORM_DATABASE.value && ORM_TIMESTAMP) {
         if (!doing.value) {
           doing.setContext(true);
           process.nextTick(() => createORMAsyncServer(props, () => doing.setContext(false)));

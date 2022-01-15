@@ -1,9 +1,9 @@
 {
-  "name": "@nppm/entity",
+  "name": "@nppm/core",
   "version": "1.0.0",
-  "description": "node private package manager:entity",
+  "description": "node private package manager:core",
   "author": "shenyunjie ",
-  "homepage": "https://github.com/cevio/nppm/tree/master/packages/entity",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/core",
   "license": "MIT",
   "main": "dist/index.js",
   "keywords": [
@@ -22,12 +22,8 @@
     "access": "public"
   },
   "dependencies": {
-    "mongodb": "^3.6.0",
-    "mssql": "^7.3.0",
-    "mysql2": "^2.3.3",
-    "oracledb": "^5.3.0",
-    "pg": "^8.7.1",
-    "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.41"
+    "@nppm/utils": "^1.0.0",
+    "@types/minimist": "^1.2.2",
+    "minimist": "^1.2.5"
   }
 }

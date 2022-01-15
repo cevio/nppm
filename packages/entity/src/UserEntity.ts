@@ -79,6 +79,13 @@ export class UserEntity {
   public scopes: string[];
 
   @Column({
+    type: 'bool',
+    comment: '是否为管理员',
+    default: false
+  })
+  public admin: boolean;
+
+  @Column({
     type: 'timestamp',
     comment: '创建时间'
   })

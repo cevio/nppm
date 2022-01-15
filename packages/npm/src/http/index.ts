@@ -1,10 +1,13 @@
 import { interfaces } from 'inversify';
 import { HttpSetupService } from './setup';
+import { HttpUserService } from './user';
 
 export {
-  HttpSetupService
+  HttpSetupService,
+  HttpUserService
 }
 
 export default [
-  HttpSetupService
+  HttpSetupService,
+  HttpUserService,
 ] as interfaces.Newable<any>[];

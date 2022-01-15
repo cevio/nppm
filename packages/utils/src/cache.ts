@@ -3,14 +3,15 @@ import { REDIS_CONNECTION_CONTEXT } from './redis';
 
 type TDefaultArguments = Record<string, string | number> | undefined;
 type TDefaultResult<O = any> = { data: O, expire?: number };
-type TCacheHandler<T extends TDefaultArguments = TDefaultArguments, O = any> = (schema?: T) => Promise<TDefaultResult<O>>
+type TCacheHandler<T extends TDefaultArguments = TDefaultArguments, O = any, R extends any[] = []> = (schema?: T, ...args: R) => Promise<TDefaultResult<O>>
 
 export class CacheAble<
   O = any,
+  R extends any[] = [],
   T extends TDefaultArguments = TDefaultArguments, 
 > {
   private readonly toPath: PathFunction<T>;
-  private readonly handler: TCacheHandler<T, O>;
+  private readonly handler: TCacheHandler<T, O, R>;
   private readonly namespace: string;
   private readonly memory: boolean;
   private value: O;
@@ -19,7 +20,7 @@ export class CacheAble<
   constructor(options: {
     namespace?: string,
     path: string, 
-    handler: TCacheHandler<T, O>,
+    handler: TCacheHandler<T, O, R>,
     memory?: boolean,
   }) {
     this.toPath = compile(options.path, { encode: encodeURIComponent });
@@ -44,9 +45,9 @@ export class CacheAble<
     return this.namespace + ':' + this.toPath(args);
   }
 
-  public async build(args?: T) {
+  public async build(args?: T, ...extras: R) {
     const path = this.toKey(args);
-    const { data, expire } = await this.handler(args);
+    const { data, expire } = await this.handler(args, ...extras);
     if (this.memory) this.value = data;
     await this.redis.set(path, JSON.stringify(data));
     if (expire !== undefined && expire >= 0) {
@@ -56,7 +57,7 @@ export class CacheAble<
     return data;
   }
 
-  public async get(args?: T) {
+  public async get(args?: T, ...extras: R) {
     if (this.memory) {
       if (this.value !== undefined) return this.value;
     }
@@ -69,6 +70,6 @@ export class CacheAble<
       }
       return dataFromRedis;
     }
-    return await this.build(args);
+    return await this.build(args, ...extras);
   }
 }
