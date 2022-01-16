@@ -1,10 +1,12 @@
-import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { existsSync, symlinkSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import { interfaces } from 'inversify';
 import { Configs } from './configs';
 import { spawn } from 'child_process';
 import { Login } from './login';
 import { effect } from '@vue/reactivity';
+import { ConfigCacheAble } from '@nppm/cache';
 import { TApplication, TApplicationPackageJSONState } from "./interface";
 import { 
   isProduction, 
@@ -19,12 +21,11 @@ import {
   ORM_INSTALLED,
   REDIS_INSTALLED
 } from '@nppm/utils';
+import { HttpServiceUnavailableException, HttpMovedPermanentlyException, HttpOKException } from '@typeservice/exception';
 
 export * from './configs';
 export * from './interface';
 export * from './login';
-
-const npminstall = require('npminstall');
 
 export class NPMCore {
   public readonly orm = ORM_CONNECTION_CONTEXT;
@@ -84,58 +85,52 @@ export class NPMCore {
     return true;
   }
 
-  public async install(app: string, registry?: string) {
-    // await npminstall({
-    //   root: this.HOME,
-    //   console: logger,
-    //   pkgs: [
-    //     {
-    //       name: app,
-    //       version: false
-    //     }
-    //   ],
-    //   registry
-    // })
-
-    // if (existsSync(app)) {
-    //   const pkgfilename = resolve(app, 'package.json');
-    //   const pkg = require(pkgfilename);
-    //   return await this.installApplication(pkg.name);
-    // }
-
-    // return await this.installApplication(app);
-
+  public async install(app: string, dev?: boolean, registry?: string) {
+    if (dev) {
+      if (!existsSync(app)) throw new HttpServiceUnavailableException('找不到插件');
+      const pkgfilename = resolve(app, 'package.json');
+      if (!existsSync(pkgfilename)) throw new HttpServiceUnavailableException('找不到插件的描述文件');
+      const pkg = require(pkgfilename);
+      if (!pkg.name || !pkg.devmain || !pkg.nppm) throw new HttpServiceUnavailableException('插件元信息不正确');
+      const target = resolve(this.HOME, 'node_modules', pkg.name);
+      const dir = dirname(target);
+      ensureDirSync(dir);
+      symlinkSync(app, target);
+      if (!this.configs.value.dependencies) this.configs.value.dependencies = {};
+      this.configs.value.dependencies[pkg.name] = 'file:' + app;
+      this.configs.saveFile();
+      return await this.installApplication(pkg.name);
+    }
     const key = await new Promise<string>((resolved, reject) => {
       const args: string[] = ['install', app];
       if (registry) args.push('--registry=' + registry);
       logger.warn('install:', 'npm', args, { cwd: this.HOME })
       const ls = spawn('npm', args, { cwd: this.HOME });
       ls.on('error', e => logger.error(e));
-      ls.stdout.on('data', m => logger.info('stdout', m.toString()));
-      ls.stderr.on('data', m => logger.info('stderr', m.toString()));
+      ls.stdout.on('data', m => logger.info(m.toString()));
+      ls.stderr.on('data', m => logger.error(m.toString()));
       ls.on('exit', code => {
         if (code !== 0) return reject(new Error('application ' + app + ' install failed.'));
-        if (existsSync(app)) {
-          const pkgfilename = resolve(app, 'package.json');
-          const pkg = require(pkgfilename);
-          return resolved(pkg.name);
-        }
         resolved(app);
       })
     })
     return await this.installApplication(key);
   }
 
-  public uninstall(app: string) {
+  public async uninstall(app: string) {
     if (!this.applications.has(app)) return;
-    return new Promise<void>((resolved, reject) => {
+    const state = await new Promise<TApplicationPackageJSONState>((resolved, reject) => {
       const ls = spawn('npm', ['uninstall', app], { cwd: this.HOME })
       ls.on('exit', code => {
         if (code !== 0) return reject(new Error('application ' + app + ' uninstall failed.'));
+        const state = this.applications.get(app);
         this.applications.delete(app);
-        resolved();
+        resolved(state);
       })
     })
+    if (state._uninstall) {
+      await Promise.resolve(state._uninstall());
+    }
   }
 
   public createLoginModule(name: string) {
@@ -144,7 +139,7 @@ export class NPMCore {
 
   public addLoginModule(login: Login) {
     this.logins.set(login.namespace, login);
-    return this;
+    return login;
   }
 
   public hasLoginModule(name: string) {
@@ -153,5 +148,46 @@ export class NPMCore {
 
   public getLoginModule(name: string) {
     return this.logins.get(name);
+  }
+
+  public removeLoginModule(login: Login) {
+    if (this.logins.has(login.namespace)) {
+      this.logins.delete(login.namespace);
+    }
+    return this;
+  }
+
+  public getLogins() {
+    const outs: Pick<TApplicationPackageJSONState, 'description' | 'name' | 'plugin_icon' | 'plugin_name' | 'version'>[] = []
+    Array.from(this.logins.keys()).forEach(name => {
+      if (this.applications.has(name)) {
+        const value = this.applications.get(name);
+        outs.push({
+          name: value.name,
+          version: value.version,
+          description: value.description,
+          plugin_icon: value.plugin_icon,
+          plugin_name: value.plugin_name,
+        })
+      }
+    })
+    return outs;
+  }
+
+  private toAuthorizeKey(session: string) {
+    return 'npm:login:' + session;
+  }
+
+  public async setLoginAuthorize(state: string) {
+    const key = this.toAuthorizeKey(state);
+    if (await this.redis.value.exists(key)) {
+      const value = await this.redis.value.get(key);
+      await this.redis.value.del(key);
+      const configs = await ConfigCacheAble.get(null, this.orm.value);
+      if (value.startsWith(configs.domain)) {
+        return new HttpMovedPermanentlyException(value);
+      }
+    }
+    return new HttpOKException();
   }
 }

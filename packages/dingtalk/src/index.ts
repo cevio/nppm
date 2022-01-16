@@ -10,7 +10,7 @@ export default async function DingTalkApplication(npmcore: NPMCore, namespace: s
   const configs = await ConfigCacheAble.get(null, npmcore.orm.value);
   const tryAgain = new HttpAcceptedException();
   tryAgain.set('retry-after', '3');
-  npmcore.addLoginModule(npmcore.createLoginModule(namespace).addLoginURL(session => {
+  const login = npmcore.addLoginModule(npmcore.createLoginModule(namespace).addLoginURL(session => {
     const redirect_url = encodeURIComponent(resolve(configs.domain, '/~/v1/login/dingtalk/authorize'));
     const timer = setTimeout(() => {
       if (stacks.has(session)) {
@@ -34,5 +34,9 @@ export default async function DingTalkApplication(npmcore: NPMCore, namespace: s
       default: throw tryAgain;
     }
   }));
-  npmcore.http.value.createService(Service);
+  const removeService = npmcore.http.value.createService(Service);
+  return () => {
+    removeService();
+    npmcore.removeLoginModule(login);
+  }
 }

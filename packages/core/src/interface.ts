@@ -13,6 +13,8 @@ export interface TApplicationPackageJSONState {
   name: string,
   version: string,
   description: string,
+  plugin_name: string,
+  plugin_icon: string,
   main: string,
   devmain: string,
   nppm: true,

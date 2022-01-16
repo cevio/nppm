@@ -5,7 +5,8 @@ import { HttpUnauthorizedException, HttpForbiddenException } from '@typeservice/
 
 export interface UserContext extends Context {
   state: {
-    user?: UserEntity
+    user?: UserEntity,
+    token: string
   }
 } 
 
@@ -17,6 +18,7 @@ export async function UserInfoMiddleware(ctx: UserContext, next: Next) {
   const key = 'npm:user:' + sp.join(':');
   if (!(await redis.exists(key))) return await next();
   ctx.state.user = JSON.parse(await redis.get(key));
+  ctx.state.token = key;
   await next();
 }
 

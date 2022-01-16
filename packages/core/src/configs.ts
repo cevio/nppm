@@ -12,7 +12,7 @@ export class Configs {
     this.configFilename = resolve(home, 'package.json');
   }
 
-  private saveFile() {
+  public saveFile() {
     writeFileSync(this.configFilename, JSON.stringify(this.value, null, 2), 'utf8');
   }
 

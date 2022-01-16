@@ -21,6 +21,7 @@ lifecycle
     jsonLimit: '500mb',
     middlewares: [createErrorCatchMiddleware, createDevelopmentMiddleware],
     services: HttpServices,
+    keys: ['nppm'],
   }))
   .createServer(npmcore.createORMServer())
   .createServer(npmcore.createRedisServer())

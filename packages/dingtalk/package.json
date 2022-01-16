@@ -2,6 +2,8 @@
   "name": "@nppm/dingtalk",
   "version": "1.0.1",
   "description": "node private package manager:dingtalk",
+  "plugin_name": "钉钉登录",
+  "plugin_icon": "http://soft.uesou.cn/uploadfile/2021/0318/20210318112115859.png",
   "author": "shenyunjie",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/dingtalk",
   "license": "MIT",

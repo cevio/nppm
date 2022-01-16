@@ -31,6 +31,7 @@
     "@types/randomstring": "^1.1.8",
     "gravatar": "^1.8.2",
     "minimist": "^1.2.5",
+    "nanoid": "^3.1.32",
     "randomstring": "^1.2.1",
     "sha1": "^1.1.1"
   }

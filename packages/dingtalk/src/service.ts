@@ -1,12 +1,29 @@
+import { inject } from 'inversify';
+import { NPMCore } from '@nppm/core';
 import { createHmac } from 'crypto';
 import { stacks, appidsecret, appid, appkey, appsecret } from './state';
 import { TAccessToken, TOpenID, TUserID, TUserInfo } from './interface';
 import axios, { AxiosResponse } from 'axios';
+import { ConfigCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRequestQuery } from '@typeservice/http';
-import { HttpServiceUnavailableException } from '@typeservice/exception';
+import { HttpServiceUnavailableException, HttpMovedPermanentlyException } from '@typeservice/exception';
 
 @HTTPController()
 export class Service {
+  @inject('npmcore') private readonly npmcore: NPMCore;
+
+  get connection() {
+    return this.npmcore.orm.value;
+  }
+
+  get redis() {
+    return this.npmcore.redis.value;
+  }
+
+  private toAuthorizeKey(session: string) {
+    return 'npm:login:' + session;
+  }
+
   @HTTPRouter({
     pathname: '/~/v1/login/dingtalk/authorize',
     methods: 'GET'
@@ -25,6 +42,7 @@ export class Service {
     const user = await this.getUserInfo(access_token, userid);
     result.data = Object.assign(user, { token: openid });
     result.status = 4;
+    throw await this.npmcore.setLoginAuthorize(state);
   }
 
   private async getAccessToken() {

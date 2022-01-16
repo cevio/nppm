@@ -1,10 +1,7 @@
 import { inject } from 'inversify';
-import { ConfigCacheAble, UserCountCacheAble } from '@nppm/cache';
-import { ConfigEntity } from '@nppm/entity';
 import { NPMCore } from '@nppm/core';
-import { HttpNotAcceptableException, HttpNotFoundException, HttpServiceUnavailableException } from '@typeservice/exception';
+import { HttpServiceUnavailableException } from '@typeservice/exception';
 import { HTTPController, HTTPRouter, HTTPRequestBody } from '@typeservice/http';
-import { ORM_CONNECTION_CONTEXT, REDIS_CONNECTION_CONTEXT, TORMConfigs, TCreateRedisServerProps } from '@nppm/utils';
 
 @HTTPController()
 export class HttpPluginService {
@@ -23,8 +20,25 @@ export class HttpPluginService {
     methods: 'POST'
   })
   // /Users/evioshen/code/github/nppm/packages/dingtalk
-  public async getWebsiteMode(@HTTPRequestBody() body: { name: string, registry?: string }) {
-    const suceess = await this.npmcore.install(body.name, body.registry);
+  public async installPlugin(@HTTPRequestBody() body: { name: string, registry?: string, dev?: boolean }) {
+    const suceess = await this.npmcore.install(body.name, body.dev, body.registry);
     if (!suceess) throw new HttpServiceUnavailableException('安装插件失败');
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugin',
+    methods: 'PUT'
+  })
+  // /Users/evioshen/code/github/nppm/packages/dingtalk
+  public unInstallPlugin(@HTTPRequestBody() body: { name: string }) {
+    return this.npmcore.uninstall(body.name);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugin/logins',
+    methods: 'GET'
+  })
+  public getAllLogins() {
+    return this.npmcore.getLogins();
   }
 }
