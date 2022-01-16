@@ -1,0 +1,32 @@
+{
+  "name": "@nppm/dingtalk",
+  "version": "1.0.0",
+  "description": "node private package manager:dingtalk",
+  "author": "shenyunjie",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/dingtalk",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "devmain": "src/index",
+  "nppm": true,
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nppm/cache": "^1.0.0",
+    "@nppm/core": "^1.0.0",
+    "@nppm/utils": "^1.0.0",
+    "axios": "^0.24.0"
+  }
+}

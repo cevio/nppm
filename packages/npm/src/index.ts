@@ -22,8 +22,8 @@ lifecycle
     middlewares: [createErrorCatchMiddleware, createDevelopmentMiddleware],
     services: HttpServices,
   }))
-  .createServer(npmcore.createApplicationServer())
   .createServer(npmcore.createORMServer())
-  .createServer(npmcore.createRedisServer());
+  .createServer(npmcore.createRedisServer())
+  .createServer(npmcore.createApplicationServer());
 
 bootstrap().then(() => logger.info('NPM服务已启动', `http://${localhost}:${schema.port}`));

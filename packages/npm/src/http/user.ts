@@ -4,16 +4,33 @@ import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { generate } from 'randomstring';
 import { UserEntity } from '@nppm/entity';
-import { NPMSession, NpmCommanderLimit, OnlyRunInCommanderLineInterface } from '@nppm/utils';
 import { UserCacheAble, UserCountCacheAble, ConfigCacheAble } from '@nppm/cache';
-import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware } from '@typeservice/http';
+import { 
+  HTTPController, 
+  HTTPRouter, 
+  HTTPRequestBody, 
+  HTTPRouterMiddleware, 
+  HTTPRequestQuery, 
+  HTTPRequestState, 
+  HTTPRequestParam 
+} from '@typeservice/http';
+import { 
+  NPMSession, 
+  NpmCommanderLimit, 
+  OnlyRunInCommanderLineInterface, 
+  UserInfoMiddleware, 
+  UserMustBeLoginedMiddleware, 
+  UserNotForbiddenMiddleware, 
+  createNPMErrorCatchMiddleware 
+} from '@nppm/utils';
 import { 
   HttpNotAcceptableException, 
   HttpNotFoundException, 
   HttpServiceUnavailableException, 
   HttpUnprocessableEntityException,
   HttpForbiddenException,
-  HttpUnauthorizedException
+  HttpUnauthorizedException,
+  HttpMovedPermanentlyException,
 } from '@typeservice/exception';
 
 @HTTPController()
@@ -46,6 +63,7 @@ export class HttpUserService {
     pathname: '/-/v1/login',
     methods: 'POST'
   })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
   @HTTPRouterMiddleware(NpmCommanderLimit('adduser'))
   public async checkUserLoginType(
@@ -72,6 +90,7 @@ export class HttpUserService {
     pathname: '/-/user/org.couchdb.user:account',
     methods: 'PUT'
   })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
   @HTTPRouterMiddleware(NpmCommanderLimit('adduser'))
   public async createUserBasedLoginModule(
@@ -106,6 +125,108 @@ export class HttpUserService {
     return {
       ok: true,
       id: 'org.couchdb.user:' + body.name,
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/v1/login/authorize',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
+  public async getLoginRedirectContent(@HTTPRequestQuery('session') session: string) {
+    const configs = await ConfigCacheAble.get(null, this.connection);
+    if (!configs.login_code || configs.login_code === 'default') {
+      throw new HttpNotFoundException('Using default login type.');
+    }
+    if (!this.npmcore.hasLoginModule(configs.login_code)) {
+      throw new HttpServiceUnavailableException('服务端未安装对应登录插件');
+    }
+    const login = this.npmcore.getLoginModule(configs.login_code);
+    const url = await login.authorize(session);
+    throw new HttpMovedPermanentlyException(url);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/v1/login/checkable',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
+  public async checkLoginRedirectContent(@HTTPRequestQuery('session') session: string) {
+    const configs = await ConfigCacheAble.get(null, this.connection);
+    if (!configs.login_code || configs.login_code === 'default') {
+      throw new HttpNotFoundException('Using default login type.');
+    }
+    if (!this.npmcore.hasLoginModule(configs.login_code)) {
+      throw new HttpServiceUnavailableException('服务端未安装对应登录插件');
+    }
+    const login = this.npmcore.getLoginModule(configs.login_code);
+    const result = await login.checkable(session);
+
+    const User = this.connection.getRepository(UserEntity);
+    let user = await User.findOne({ account: result.account });
+    if (user) {
+      if (user.login_forbiden) throw new HttpForbiddenException('此用户禁止登录');
+      user.avatar = result.avatar;
+      user.email = result.email;
+      user.nickname = result.nickname;
+      user.password = result.token;
+      user.gmt_modified = new Date();
+    } else {
+      user = new UserEntity();
+      user.salt = generate(5);
+      user.account = result.account;
+      user.avatar = result.avatar;
+      user.email = result.email;
+      user.gmt_create = new Date();
+      user.gmt_modified = new Date();
+      user.login_code = configs.login_code;
+      user.login_forbiden = false;
+      user.nickname = result.nickname;
+      user.scopes = [];
+      user.password = result.token;
+    }
+    user = await User.save(user);
+    await this.redis.set('npm:user:Bearer:' + result.token, JSON.stringify(user));
+    await UserCountCacheAble.build(null, this.connection);
+    await UserCacheAble.build({ id: user.id }, this.connection);
+    return result;
+  }
+
+  @HTTPRouter({
+    pathname: '/-/whoami',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
+  @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
+  @HTTPRouterMiddleware(NpmCommanderLimit('whoami'))
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  public whoami(@HTTPRequestState('user') user: UserEntity) {
+    return {
+      username: user ? user.nickname : null,
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/-/user/token/:token',
+    methods: 'DELETE'
+  })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
+  @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
+  @HTTPRouterMiddleware(NpmCommanderLimit('logout'))
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  public async logout(@HTTPRequestParam('token') token: string) {
+    if (token) {
+      const key = 'npm:user:Bearer:' + token;
+      if (await this.redis.exists(key)) {
+        await this.redis.del(key);
+      }
+    }
+    return {
+      ok: true,
     }
   }
 

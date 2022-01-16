@@ -43,13 +43,14 @@ export const ORM_USERNAME = ref<TORMConfigs['username']>();
 export const ORM_PASSWORD = ref<TORMConfigs['password']>();
 export const ORM_DATABASE = ref<TORMConfigs['database']>();
 export const ORM_TIMESTAMP = ref<number>(Date.now());
+export const ORM_INSTALLED = ref<boolean>(false);
 
 export function createORMObserver(props: TCreateORMServerProps) {
   const doing = createContext(false);
   setORMState(props.configs);
   return () => {
     const stopEffect = effect(() => {
-      if (ORM_TYPE.value && ORM_HOST.value && ORM_PORT.value && ORM_USERNAME.value && ORM_PASSWORD.value && ORM_DATABASE.value && ORM_TIMESTAMP) {
+      if (ORM_TYPE.value && ORM_HOST.value && ORM_PORT.value && ORM_USERNAME.value && ORM_PASSWORD.value && ORM_DATABASE.value && ORM_TIMESTAMP && !ORM_INSTALLED.value) {
         if (!doing.value) {
           doing.setContext(true);
           process.nextTick(() => createORMAsyncServer(props, () => doing.setContext(false)));
@@ -91,7 +92,11 @@ export function createORMAsyncServer(props: TCreateORMServerProps, done: () => v
     entities: props.entities,
   } as ConnectionOptions).then(connection => {
     ORM_CONNECTION_CONTEXT.setContext(connection);
-  }).catch(e => logger.error(e)).finally(done);
+    ORM_INSTALLED.value = true;
+  }).catch(e => {
+    logger.error(e);
+    ORM_INSTALLED.value = false;
+  }).finally(done);
 }
 
 export function createDefaultORMState(): TORMConfigs {

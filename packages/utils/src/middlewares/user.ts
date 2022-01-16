@@ -26,7 +26,7 @@ export async function UserMustBeLoginedMiddleware(ctx: UserContext, next: Next) 
 }
 
 export async function UserNotForbiddenMiddleware(ctx: UserContext, next: Next) {
-  if (!ctx.state.user.login_forbiden) throw new HttpForbiddenException('用户禁止登录');
+  if (ctx.state.user.login_forbiden) throw new HttpForbiddenException('用户禁止登录');
   await next();
 }
 

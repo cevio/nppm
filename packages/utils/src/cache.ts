@@ -3,7 +3,7 @@ import { REDIS_CONNECTION_CONTEXT } from './redis';
 
 type TDefaultArguments = Record<string, string | number> | undefined;
 type TDefaultResult<O = any> = { data: O, expire?: number };
-type TCacheHandler<T extends TDefaultArguments = TDefaultArguments, O = any, R extends any[] = []> = (schema?: T, ...args: R) => Promise<TDefaultResult<O>>
+type TCacheHandler<T extends TDefaultArguments = TDefaultArguments, O = any, R extends any[] = []> = (schema?: T, ...args: R) => Promise<TDefaultResult<O>>;
 
 export class CacheAble<
   O = any,
@@ -16,6 +16,7 @@ export class CacheAble<
   private readonly memory: boolean;
   private value: O;
   private timer: NodeJS.Timer;
+  private _redis: typeof REDIS_CONNECTION_CONTEXT.value;
 
   constructor(options: {
     namespace?: string,
@@ -30,7 +31,11 @@ export class CacheAble<
   }
 
   get redis() {
-    return REDIS_CONNECTION_CONTEXT.value;
+    return REDIS_CONNECTION_CONTEXT.value || this._redis;
+  }
+
+  set redis(obj: typeof REDIS_CONNECTION_CONTEXT.value) {
+    this._redis = obj;
   }
 
   private startTimer(time: number) {

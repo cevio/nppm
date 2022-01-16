@@ -32,13 +32,14 @@ export const REDIS_HOST = ref<TCreateRedisServerProps['host']>();
 export const REDIS_PORT = ref<TCreateRedisServerProps['port']>();
 export const REDIS_PASSWORD = ref<TCreateRedisServerProps['password']>();
 export const REDIS_DB = ref<TCreateRedisServerProps['db']>();
+export const REDIS_INSTALLED = ref<boolean>(false);
 
 export function createRedisObserver(props: TCreateRedisServerProps) {
   const doing = createContext(false);
   setRedisState(props);
   return () => {
     const stopEffect = effect(() => {
-      if (REDIS_HOST.value && REDIS_PORT.value) {
+      if (REDIS_HOST.value && REDIS_PORT.value && !REDIS_INSTALLED.value) {
         if (!doing.value) {
           doing.setContext(true);
           process.nextTick(() => createRedisAsyncServer({
@@ -72,12 +73,16 @@ export function createRedisAsyncServer(props: TCreateRedisServerProps, done: () 
     REDIS_CONNECTION_CONTEXT.setContext(null);
   }
   const redis = new ioRedis(props);
-  const onerror = (e: any) => logger.error(e);
+  const onerror = (e: any) => {
+    logger.error(e);
+    REDIS_INSTALLED.value = false;
+  }
   redis.on('error', onerror);
   redis.on('connect', () => {
     redis.off('error', onerror);
     REDIS_CONNECTION_CONTEXT.setContext(redis);
     done();
+    REDIS_INSTALLED.value = true;
   })
 }
 

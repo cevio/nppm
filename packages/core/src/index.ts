@@ -4,8 +4,8 @@ import { interfaces } from 'inversify';
 import { Configs } from './configs';
 import { spawn } from 'child_process';
 import { Login } from './login';
-import { HttpServiceUnavailableException } from '@typeservice/exception';
-import { TSchema, TApplication, TApplicationPackageJSONState } from "./interface";
+import { effect } from '@vue/reactivity';
+import { TApplication, TApplicationPackageJSONState } from "./interface";
 import { 
   isProduction, 
   createORMObserver, 
@@ -14,7 +14,10 @@ import {
   ORM_CONNECTION_CONTEXT, 
   HTTP_APPLICATION_CONTEXT, 
   HTTP_SERVER_CONTEXT, 
-  REDIS_CONNECTION_CONTEXT 
+  REDIS_CONNECTION_CONTEXT, 
+  logger,
+  ORM_INSTALLED,
+  REDIS_INSTALLED
 } from '@nppm/utils';
 
 export * from './configs';
@@ -31,14 +34,6 @@ export class NPMCore {
   private readonly entities = new Set<interfaces.Newable<any>>();
   private readonly applications = new Map<string, TApplicationPackageJSONState>();
   private readonly logins = new Map<string, Login>();
-  
-  public createSchemaServer() {
-    return (schema: TSchema) => {
-      if (!schema.port) {
-        throw new HttpServiceUnavailableException('NPM server need `port` option, you must be use `--port <port>` on commander line');
-      }
-    }
-  }
 
   public addORMEntities(...enitities: interfaces.Newable<any>[]) {
     const i = this.entities.size;
@@ -61,11 +56,15 @@ export class NPMCore {
   }
 
   public createApplicationServer() {
-    return async () => {
-      const dependencies = this.configs.value.dependencies;
-      for (const key in dependencies) {
-        await this.installApplication(key);
-      }
+    return () => {
+      effect(() => {
+        if (ORM_INSTALLED.value && REDIS_INSTALLED.value) {
+          const dependencies = this.configs.value.dependencies;
+          for (const key in dependencies) {
+            this.installApplication(key).catch(e => logger.error(e));
+          }
+        }
+      })
     }
   }
 
@@ -76,15 +75,18 @@ export class NPMCore {
     if (!existsSync(pkgfilename)) return;
     const pkg = require(pkgfilename) as TApplicationPackageJSONState;
     if (!pkg.nppm) return false;
-    const application = require(!isProduction ? resolve(dictionary, pkg.devmain) : dictionary) as TApplication;
-    pkg._uninstall = await application(this);
+    const application = require(!isProduction ? resolve(dictionary, pkg.devmain) : dictionary);
+    const installer = (application.default || application) as TApplication;
+    pkg._uninstall = await Promise.resolve(installer(this, key));
     this.applications.set(key, pkg);
     return true;
   }
 
-  public async install(app: string) {
+  public async install(app: string, registry?: string) {
     const key = await new Promise<string>((resolved, reject) => {
-      const ls = spawn('npm', ['install', app], { cwd: this.HOME })
+      const args: string[] = ['install', app];
+      if (registry) args.push('--registry=' + registry);
+      const ls = spawn('npm', args, { cwd: this.HOME })
       ls.on('exit', code => {
         if (code !== 0) return reject(new Error('application ' + app + ' install failed.'));
         if (existsSync(app)) {
@@ -98,6 +100,18 @@ export class NPMCore {
     return await this.installApplication(key);
   }
 
+  public uninstall(app: string) {
+    if (!this.applications.has(app)) return;
+    return new Promise<void>((resolved, reject) => {
+      const ls = spawn('npm', ['uninstall', app], { cwd: this.HOME })
+      ls.on('exit', code => {
+        if (code !== 0) return reject(new Error('application ' + app + ' uninstall failed.'));
+        this.applications.delete(app);
+        resolved();
+      })
+    })
+  }
+
   public createLoginModule(name: string) {
     return new Login(name);
   }
@@ -109,5 +123,9 @@ export class NPMCore {
 
   public hasLoginModule(name: string) {
     return this.logins.has(name);
+  }
+
+  public getLoginModule(name: string) {
+    return this.logins.get(name);
   }
 }
