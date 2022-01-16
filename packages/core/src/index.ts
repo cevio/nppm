@@ -24,6 +24,8 @@ export * from './configs';
 export * from './interface';
 export * from './login';
 
+const npminstall = require('npminstall');
+
 export class NPMCore {
   public readonly orm = ORM_CONNECTION_CONTEXT;
   public readonly redis = REDIS_CONNECTION_CONTEXT;
@@ -83,10 +85,34 @@ export class NPMCore {
   }
 
   public async install(app: string, registry?: string) {
+    // await npminstall({
+    //   root: this.HOME,
+    //   console: logger,
+    //   pkgs: [
+    //     {
+    //       name: app,
+    //       version: false
+    //     }
+    //   ],
+    //   registry
+    // })
+
+    // if (existsSync(app)) {
+    //   const pkgfilename = resolve(app, 'package.json');
+    //   const pkg = require(pkgfilename);
+    //   return await this.installApplication(pkg.name);
+    // }
+
+    // return await this.installApplication(app);
+
     const key = await new Promise<string>((resolved, reject) => {
       const args: string[] = ['install', app];
       if (registry) args.push('--registry=' + registry);
-      const ls = spawn('npm', args, { cwd: this.HOME })
+      logger.warn('install:', 'npm', args, { cwd: this.HOME })
+      const ls = spawn('npm', args, { cwd: this.HOME });
+      ls.on('error', e => logger.error(e));
+      ls.stdout.on('data', m => logger.info('stdout', m.toString()));
+      ls.stderr.on('data', m => logger.info('stderr', m.toString()));
       ls.on('exit', code => {
         if (code !== 0) return reject(new Error('application ' + app + ' install failed.'));
         if (existsSync(app)) {

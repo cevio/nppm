@@ -24,6 +24,7 @@
   "dependencies": {
     "@nppm/utils": "^1.0.0",
     "@types/minimist": "^1.2.2",
-    "minimist": "^1.2.5"
+    "minimist": "^1.2.5",
+    "npminstall": "^5.4.0"
   }
 }
