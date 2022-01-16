@@ -1,6 +1,6 @@
 {
   "name": "@nppm/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "node private package manager:core",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/core",
@@ -22,7 +22,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@nppm/utils": "^1.0.0",
+    "@nppm/utils": "^1.0.1",
     "@types/minimist": "^1.2.2",
     "minimist": "^1.2.5",
     "npminstall": "^5.4.0"

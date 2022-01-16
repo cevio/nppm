@@ -1,6 +1,6 @@
 {
   "name": "@nppm/npm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "node private package manager:npm",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/npm",
@@ -22,10 +22,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@nppm/cache": "^1.0.0",
-    "@nppm/core": "^1.0.0",
-    "@nppm/entity": "^1.0.0",
-    "@nppm/utils": "^1.0.0",
+    "@nppm/cache": "^1.0.1",
+    "@nppm/core": "^1.0.1",
+    "@nppm/entity": "^1.0.1",
+    "@nppm/utils": "^1.0.1",
     "@types/gravatar": "^1.8.3",
     "@types/minimist": "^1.2.2",
     "@types/randomstring": "^1.1.8",

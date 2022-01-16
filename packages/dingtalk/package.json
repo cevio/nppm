@@ -1,6 +1,6 @@
 {
   "name": "@nppm/dingtalk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "node private package manager:dingtalk",
   "author": "shenyunjie",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/dingtalk",
@@ -24,9 +24,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@nppm/cache": "^1.0.0",
-    "@nppm/core": "^1.0.0",
-    "@nppm/utils": "^1.0.0",
+    "@nppm/cache": "^1.0.1",
+    "@nppm/core": "^1.0.1",
+    "@nppm/utils": "^1.0.1",
     "axios": "^0.24.0"
   }
 }
