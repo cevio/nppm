@@ -1,10 +1,10 @@
 import { inject } from 'inversify';
 import { ConfigCacheAble, UserCountCacheAble } from '@nppm/cache';
-import { ConfigEntity } from '@nppm/entity';
+import { ConfigEntity, UserEntity } from '@nppm/entity';
 import { NPMCore } from '@nppm/core';
 import { HttpNotAcceptableException, HttpNotFoundException } from '@typeservice/exception';
-import { HTTPController, HTTPRouter, HTTPRequestBody } from '@typeservice/http';
-import { ORM_CONNECTION_CONTEXT, REDIS_CONNECTION_CONTEXT, TORMConfigs, TCreateRedisServerProps } from '@nppm/utils';
+import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestState } from '@typeservice/http';
+import { ORM_CONNECTION_CONTEXT, REDIS_CONNECTION_CONTEXT, TORMConfigs, TCreateRedisServerProps, UserInfoMiddleware } from '@nppm/utils';
 
 @HTTPController()
 export class HttpSetupService {
@@ -32,11 +32,23 @@ export class HttpSetupService {
 
   @HTTPRouter({
     pathname: '/~/setup/orm',
+    methods: 'GET'
+  })
+  public getORMState() {
+    return this.npmcore.configs.value.orm;
+  }
+
+  @HTTPRouter({
+    pathname: '/~/setup/orm',
     methods: 'POST'
   })
-  public async setORMState(@HTTPRequestBody() body: TORMConfigs) {
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  public async setORMState(
+    @HTTPRequestBody() body: TORMConfigs,
+    @HTTPRequestState('user') user: UserEntity
+  ) {
     const mode = await this.getWebsiteMode();
-    if (mode !== 1) throw new HttpNotFoundException();
+    if (mode !== 1 && !user.admin) throw new HttpNotFoundException();
     const rollback = this.npmcore.configs.updateORMState(body);
     const status = await this.checkStatus(() => !!ORM_CONNECTION_CONTEXT.value, 1000, 30 * 1000);
     if (status) {
@@ -72,6 +84,14 @@ export class HttpSetupService {
       rollback();
     }
     return status;
+  }
+
+  @HTTPRouter({
+    pathname: '/~/setup/redis',
+    methods: 'GET'
+  })
+  public getRedisState() {
+    return this.npmcore.configs.value.redis;
   }
 
   private checkStatus(fn: () => boolean, step: number, timeout: number) {
