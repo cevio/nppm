@@ -1,4 +1,5 @@
 import { resolve } from 'url';
+import { FindManyOptions, Like } from 'typeorm';
 import { url } from 'gravatar';
 import { nanoid } from 'nanoid';
 import { inject } from 'inversify';
@@ -393,14 +394,22 @@ export class HttpUserService {
   public async getUsers(
     @HTTPRequestQuery('page') page: string,
     @HTTPRequestQuery('size') size: string,
+    @HTTPRequestQuery('keyword') keyword: string,
   ) {
     const _page = Number(page || '1');
     const _size = Number(size || '10');
     const User = this.connection.getRepository(UserEntity);
-    return await User.findAndCount({
+    const conditions: FindManyOptions<UserEntity> = {
       skip: (_page - 1) * _size, 
       take: _size,
-    })
+    }
+    if (keyword) {
+      conditions.where = [
+        { account: Like('%' + keyword + '%') },
+        { nickname: Like('%' + keyword + '%') },
+      ]
+    }
+    return await User.findAndCount(conditions);
   }
 
   @HTTPRouter({
