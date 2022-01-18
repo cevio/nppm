@@ -50,14 +50,6 @@ export class UserEntity {
 
   @Column({
     type: 'varchar',
-    length: 5,
-    comment: '加盐',
-    nullable: true,
-  })
-  public salt: string;
-
-  @Column({
-    type: 'varchar',
     length: 40,
     comment: '密码编码',
     nullable: true,

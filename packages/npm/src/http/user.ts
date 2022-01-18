@@ -1,9 +1,8 @@
-import { resolve, URL } from 'url';
+import { resolve } from 'url';
 import { url } from 'gravatar';
 import { nanoid } from 'nanoid';
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
-import { generate } from 'randomstring';
 import { UserEntity } from '@nppm/entity';
 import { UserCacheAble, UserCountCacheAble, ConfigCacheAble } from '@nppm/cache';
 import { 
@@ -25,7 +24,7 @@ import {
   UserMustBeLoginedMiddleware, 
   UserNotForbiddenMiddleware, 
   createNPMErrorCatchMiddleware, 
-  logger
+  UserMustBeAdminMiddleware
 } from '@nppm/utils';
 import { 
   HttpNotAcceptableException, 
@@ -36,6 +35,8 @@ import {
   HttpUnauthorizedException,
   HttpMovedPermanentlyException,
 } from '@typeservice/exception';
+
+type TLoginType = 'Basic' | 'Bearer';
 
 @HTTPController()
 export class HttpUserService {
@@ -49,6 +50,39 @@ export class HttpUserService {
     return this.npmcore.redis.value;
   }
 
+  private insertUser<T extends Omit<Partial<UserEntity>, 'id'>>(state: T, type: TLoginType) {
+    const user = new UserEntity();
+    return this.updateUser(user, state, type);
+  }
+
+  private async updateUser<T extends Omit<Partial<UserEntity>, 'id'>>(user: UserEntity, state: T, type: TLoginType) {
+    const User = this.connection.getRepository(UserEntity);
+    for (const key in state) {
+      if (Object.prototype.hasOwnProperty.call(state, key)) {
+        // @ts-ignore
+        user[key] = state[key];
+      }
+    }
+    if (type === 'Basic') {
+      if (state.account && state.password) {
+        user.password = this.buildBasicPassword(state.account, state.password);
+      }
+    }
+    user = await User.save(user);
+    switch (type) {
+      case 'Basic':
+        await this.redis.set('npm:user:Basic:' + user.password, JSON.stringify(user));
+        await this.redis.expire('npm:user:Basic:' + user.password, 7 * 24 * 60 * 60);
+        break;
+      case 'Bearer':
+        await this.redis.set('npm:user:Bearer:' + user.password, JSON.stringify(user));
+        await this.redis.expire('npm:user:Bearer:' + user.password, 7 * 24 * 60 * 60);
+        break;
+    }
+    await UserCountCacheAble.build(null, this.connection);
+    return await UserCacheAble.build({ id: user.id }, this.connection);
+  }
+
   @HTTPRouter({
     pathname: '/~/user',
     methods: 'POST'
@@ -57,10 +91,19 @@ export class HttpUserService {
     const User = this.connection.getRepository(UserEntity);
     const count = await User.count();
     if (count !== 0) throw new HttpNotAcceptableException('非法操作');
-    const user = await this.createNewUser(body.username, body.password, body.email, 'default', true);
-    await this.redis.set('npm:user:Basic:' + Buffer.from(user.account + ':' + user.password).toString('base64'), JSON.stringify(user));
-    await UserCountCacheAble.build(null, this.connection);
-    return await UserCacheAble.build({ id: user.id }, this.connection);
+    return await this.insertUser({
+      account: body.username,
+      avatar: url(body.email),
+      email: body.email,
+      gmt_create: new Date(),
+      gmt_modified: new Date(),
+      login_code: 'default',
+      login_forbiden: false,
+      nickname: body.username,
+      scopes: [],
+      admin: true,
+      password: body.password,
+    }, 'Basic');
   }
 
   @HTTPRouter({
@@ -98,7 +141,15 @@ export class HttpUserService {
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
   @HTTPRouterMiddleware(NpmCommanderLimit('adduser'))
   public async createUserBasedLoginModule(
-    @HTTPRequestBody() body: { _id: string, name: string, password: string, type: string, roles: string[], data: string, email?: string }
+    @HTTPRequestBody() body: { 
+      _id: string, 
+      name: string, 
+      password: string, 
+      type: string, 
+      roles: string[], 
+      data: string, 
+      email?: string 
+    }
   ) {
     const configs = await ConfigCacheAble.get(null, this.connection);
     if (configs.login_code !== 'default') {
@@ -106,25 +157,27 @@ export class HttpUserService {
     }
     if (!body.email) throw new HttpNotFoundException();
     const User = this.connection.getRepository(UserEntity);
-    let user = await User.findOne({
-      account: body.name,
-      login_code: 'default',
-    })
+    let user = await User.findOne({ account: body.name, login_code: 'default' });
     if (user) {
       if (user.login_forbiden) throw new HttpForbiddenException();
-      if (!this.checkPassowrd(body.password, user.salt, user.password)) throw new HttpUnauthorizedException();;
-      const updateHash = this.getPasswordAndSalt(body.password);
-      user.salt = updateHash.salt;
-      user.password = updateHash.password;
-      user.gmt_modified = new Date();
-      user = await User.save(user);
+      const base64 = this.buildBasicPassword(body.name, body.password);
+      if (base64 !== user.password) throw new HttpUnauthorizedException();
+      user = await this.updateUser(user, { gmt_modified: new Date() }, 'Basic');
     } else {
-      user = await this.createNewUser(body.name, body.password, body.email, 'default', false);
+      user = await this.insertUser({
+        account: body.name,
+        avatar: url(body.email),
+        email: body.email,
+        gmt_create: new Date(),
+        gmt_modified: new Date(),
+        login_code: 'default',
+        login_forbiden: false,
+        nickname: body.name,
+        scopes: [],
+        admin: false,
+        password: body.password,
+      }, 'Basic');
     }
-
-    await this.redis.set('npm:user:Basic:' + Buffer.from(user.account + ':' + user.password).toString('base64'), JSON.stringify(user));
-    await UserCountCacheAble.build(null, this.connection);
-    await UserCacheAble.build({ id: user.id }, this.connection);
 
     return {
       ok: true,
@@ -174,29 +227,28 @@ export class HttpUserService {
     let user = await User.findOne({ account: result.account });
     if (user) {
       if (user.login_forbiden) throw new HttpForbiddenException('此用户禁止登录');
-      user.avatar = result.avatar;
-      user.email = result.email;
-      user.nickname = result.nickname;
-      user.password = result.token;
-      user.gmt_modified = new Date();
+      user = await this.updateUser(user, {
+        avatar: result.avatar,
+        email: result.email,
+        nickname: result.nickname,
+        password: result.token,
+        gmt_modified: new Date()
+      }, 'Bearer')
     } else {
-      user = new UserEntity();
-      user.salt = generate(5);
-      user.account = result.account;
-      user.avatar = result.avatar;
-      user.email = result.email;
-      user.gmt_create = new Date();
-      user.gmt_modified = new Date();
-      user.login_code = configs.login_code;
-      user.login_forbiden = false;
-      user.nickname = result.nickname;
-      user.scopes = [];
-      user.password = result.token;
+      user = await this.insertUser({
+        account: result.account,
+        avatar: result.avatar,
+        email: result.email,
+        gmt_create: new Date(),
+        gmt_modified: new Date(),
+        login_code: configs.login_code,
+        login_forbiden: false,
+        nickname: result.nickname,
+        scopes: [],
+        password: result.token,
+      }, 'Bearer');
     }
-    user = await User.save(user);
-    await this.redis.set('npm:user:Bearer:' + result.token, JSON.stringify(user));
-    await UserCountCacheAble.build(null, this.connection);
-    await UserCacheAble.build({ id: user.id }, this.connection);
+
     if (redirect) {
       await this.setUserCookie(cookie, user, 'Bearer');
       throw new HttpMovedPermanentlyException(redirect);
@@ -258,17 +310,9 @@ export class HttpUserService {
         const User = this.connection.getRepository(UserEntity);
         let user = await User.findOne({ account: body.username });
         if (!user) throw new HttpNotFoundException('找不到用户');
-        if (!this.checkPassowrd(body.password, user.salt, user.password)) throw new HttpForbiddenException('账号密码不正确');
-        const updateHash = this.getPasswordAndSalt(body.password);
-        user.salt = updateHash.salt;
-        user.password = updateHash.password;
-        user.gmt_modified = new Date();
-        user = await User.save(user);
-        await this.redis.set('npm:user:Basic:' + Buffer.from(user.account + ':' + user.password).toString('base64'), JSON.stringify(user));
-        await UserCountCacheAble.build(null, this.connection);
-        user = await UserCacheAble.build({ id: user.id }, this.connection);
+        if (this.buildBasicPassword(body.username, body.password) !== user.password) throw new HttpForbiddenException('账号密码不正确');
+        await this.updateUser(user, { gmt_modified: new Date() }, 'Basic');
         await this.setUserCookie(cookie, user, 'Basic');
-        delete user.salt;
         delete user.password;
         delete user.login_forbiden;
         return user;
@@ -320,7 +364,6 @@ export class HttpUserService {
   @HTTPRouterMiddleware(UserInfoMiddleware)
   public getUserInfo(@HTTPRequestState('user') user: UserEntity) {
     if (user) {
-      delete user.salt;
       delete user.password;
       delete user.login_forbiden;
       return user;
@@ -340,48 +383,99 @@ export class HttpUserService {
     }
   }
 
+  @HTTPRouter({
+    pathname: '/~/users',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async getUsers(
+    @HTTPRequestQuery('page') page: string,
+    @HTTPRequestQuery('size') size: string,
+  ) {
+    const _page = Number(page || '1');
+    const _size = Number(size || '10');
+    const User = this.connection.getRepository(UserEntity);
+    return await User.findAndCount({
+      skip: (_page - 1) * _size, 
+      take: _size,
+    })
+  }
+
+  @HTTPRouter({
+    pathname: '/~/user/:uid(\\d+)/admin',
+    methods: 'PUT'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async changeUserAdminStatus(
+    @HTTPRequestParam('uid') uid: string,
+    @HTTPRequestBody() body: { value: boolean },
+    @HTTPRequestState('user') me: UserEntity,
+  ) {
+    if (me.id === Number(uid)) throw new HttpNotAcceptableException('不能操作自己');
+    const User = this.connection.getRepository(UserEntity);
+    let user = await User.findOne({ id: Number(uid) });
+    if (!user) throw new HttpNotFoundException('找不到用户');
+    return await this.updateUser(user, { admin: body.value }, user.login_code === 'default' ? 'Basic' : 'Bearer');
+  }
+
+  @HTTPRouter({
+    pathname: '/~/user/:uid(\\d+)/forbidden',
+    methods: 'PUT'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async changeUserAdminForbiddenStatus(
+    @HTTPRequestParam('uid') uid: string,
+    @HTTPRequestBody() body: { value: boolean },
+    @HTTPRequestState('user') me: UserEntity,
+  ) {
+    if (me.id === Number(uid)) throw new HttpNotAcceptableException('不能操作自己');
+    const User = this.connection.getRepository(UserEntity);
+    let user = await User.findOne({ id: Number(uid) });
+    if (!user) throw new HttpNotFoundException('找不到用户');
+    return await this.updateUser(user, { login_forbiden: body.value }, user.login_code === 'default' ? 'Basic' : 'Bearer');
+  }
+
+  @HTTPRouter({
+    pathname: '/~/user/:uid(\\d+)',
+    methods: 'DELETE'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async deleteUserByAdmin(
+    @HTTPRequestParam('uid') uid: string,
+    @HTTPRequestState('user') me: UserEntity,
+  ) {
+    if (me.id === Number(uid)) throw new HttpNotAcceptableException('不能操作自己');
+    const User = this.connection.getRepository(UserEntity);
+    let user = await User.findOne({ id: Number(uid) });
+    if (!user) throw new HttpNotFoundException('找不到用户');
+    await User.delete(Number(uid));
+    const hash = user.login_code === 'default' ? 'npm:user:Basic:' + user.password : 'npm:user:Bearer:' + user.password;
+    if (await this.redis.exists(hash)) await this.redis.del(hash);
+    await UserCountCacheAble.build(null, this.connection);
+    await UserCacheAble.del({ id: user.id });
+    return user;
+  }
+
   private toAuthorizeKey(session: string) {
     return 'npm:login:' + session;
   }
 
-  private createNewUser(account: string, password: string, email: string, login_code: string, isAdmin: boolean) {
-    const User = this.connection.getRepository(UserEntity);
-    const insertHash = this.getPasswordAndSalt(password);
-    let user = new UserEntity();
-    user.salt = generate(5);
-    user.salt = insertHash.salt;
-    user.account = account;
-    user.avatar = url(email);
-    user.email = email;
-    user.gmt_create = new Date();
-    user.gmt_modified = new Date();
-    user.login_code = login_code;
-    user.login_forbiden = false;
-    user.nickname = account;
-    user.scopes = [];
-    user.admin = isAdmin;
-    user.password = insertHash.password;
-    return User.save(user);
-  }
-
-  private getPasswordAndSalt(password: string) {
-    const salt = generate(5);
-    const hash = require('sha1')(salt + ':' + password);
-    return {
-      salt,
-      password: hash,
-    }
-  }
-
-  private checkPassowrd(password: string, salt: string, hash: string) {
-    return require('sha1')(salt + ':' + password) === hash;
+  private buildBasicPassword(account: string, password: string) {
+    return Buffer.from(account + ':' + password).toString('base64');
   }
 
   private async setUserCookie(cookie: TCookie, user: UserEntity, type: 'Basic' | 'Bearer') {
     const maxAge = 7 * 24 * 60 * 60 * 1000;
     const expires = new Date(Date.now() + maxAge);
-    const hash = type === 'Basic' ? Buffer.from(user.account + ':' + user.password).toString('base64') : user.password;
-    cookie.set('authorization', type + ' ' + hash, { 
+    cookie.set('authorization', type + ' ' + user.password, { 
       signed: true,
       path: '/',
       // domain: '.' + obj.hostname,

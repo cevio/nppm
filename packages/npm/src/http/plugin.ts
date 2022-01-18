@@ -1,7 +1,8 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { HttpServiceUnavailableException } from '@typeservice/exception';
-import { HTTPController, HTTPRouter, HTTPRequestBody } from '@typeservice/http';
+import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware } from '@typeservice/http';
+import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware } from '@nppm/utils';
 
 @HTTPController()
 export class HttpPluginService {
@@ -20,6 +21,9 @@ export class HttpPluginService {
     methods: 'POST'
   })
   // /Users/evioshen/code/github/nppm/packages/dingtalk
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async installPlugin(@HTTPRequestBody() body: { name: string, registry?: string, dev?: boolean }) {
     const suceess = await this.npmcore.install(body.name, body.dev, body.registry);
     if (!suceess) throw new HttpServiceUnavailableException('安装插件失败');
@@ -30,6 +34,9 @@ export class HttpPluginService {
     methods: 'PUT'
   })
   // /Users/evioshen/code/github/nppm/packages/dingtalk
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public unInstallPlugin(@HTTPRequestBody() body: { name: string }) {
     return this.npmcore.uninstall(body.name);
   }
@@ -40,5 +47,16 @@ export class HttpPluginService {
   })
   public getAllLogins() {
     return this.npmcore.getLogins();
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugins',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public getAllPlugins() {
+    return this.npmcore.getPlugins();
   }
 }

@@ -174,6 +174,10 @@ export class NPMCore {
     return outs;
   }
 
+  public getPlugins() {
+    return Array.from(this.applications.values());
+  }
+
   private toAuthorizeKey(session: string) {
     return 'npm:login:' + session;
   }

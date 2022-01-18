@@ -18,6 +18,10 @@ export class HttpSetupService {
     return this.npmcore.redis.value;
   }
 
+  /**
+   * 获取当前安装步骤
+   * @returns 0 | 1 | 2 | 3
+   */
   @HTTPRouter({
     pathname: '/~/setup/mode',
     methods: 'GET'
@@ -30,6 +34,10 @@ export class HttpSetupService {
     return 0;
   }
 
+  /**
+   * 获取ORM存储数据
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/setup/orm',
     methods: 'GET'
@@ -38,6 +46,12 @@ export class HttpSetupService {
     return this.npmcore.configs.value.orm;
   }
 
+  /**
+   * 设置ORM存储数据
+   * @param body 
+   * @param user 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/setup/orm',
     methods: 'POST'
@@ -68,6 +82,11 @@ export class HttpSetupService {
     return status;
   }
 
+  /**
+   * 设置REDIS存储数据
+   * @param body 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/setup/redis',
     methods: 'POST'
@@ -86,6 +105,10 @@ export class HttpSetupService {
     return status;
   }
 
+  /**
+   * 获取REDIS存储数据
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/setup/redis',
     methods: 'GET'
