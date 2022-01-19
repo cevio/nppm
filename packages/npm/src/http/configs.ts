@@ -11,6 +11,7 @@ export interface TConfigs {
   scopes: string[],
   login_code: string,
   registries: string[],
+  dictionary: string,
 }
 
 @HTTPController()
@@ -50,6 +51,7 @@ export class HttpConfigsService {
     configs.login_code = body.login_code;
     configs.registries = body.registries;
     configs.scopes = body.scopes;
+    configs.dictionary = body.dictionary;
     configs = await Configs.save(configs);
     return await ConfigCacheAble.build(null, this.connection);
   }

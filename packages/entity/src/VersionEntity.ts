@@ -37,8 +37,9 @@ export class VersionEntity {
   public description: string;
 
   @Column({
-    type: 'json',
-    comment: '主页'
+    type: 'text',
+    comment: '主页',
+    nullable: true,
   })
   public homepage: string;
 
@@ -56,10 +57,10 @@ export class VersionEntity {
   public readme: string;
 
   @Column({
-    type: 'text',
-    comment: '仓库地址'
+    type: 'json',
+    comment: '仓库地址',
   })
-  public repository: string;
+  public repository: any;
 
   @Column({
     type: 'varchar',
@@ -92,7 +93,7 @@ export class VersionEntity {
     default: 100,
     comment: '文件类型'
   })
-  public attachment_type: number;
+  public attachment_type: string;
 
   @Column({
     type: 'varchar',

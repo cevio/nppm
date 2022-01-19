@@ -30,15 +30,15 @@ export class HttpPluginService {
   }
 
   @HTTPRouter({
-    pathname: '/~/plugin',
-    methods: 'PUT'
+    pathname: '/~/plugin/:pkg',
+    methods: 'DELETE'
   })
   // /Users/evioshen/code/github/nppm/packages/dingtalk
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
-  public unInstallPlugin(@HTTPRequestBody() body: { name: string }) {
-    return this.npmcore.uninstall(body.name);
+  public unInstallPlugin(@HTTPRequestParam('pkg') name: string) {
+    return this.npmcore.uninstall(name);
   }
 
   @HTTPRouter({

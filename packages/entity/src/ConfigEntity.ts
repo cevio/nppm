@@ -31,4 +31,13 @@ export class ConfigEntity {
     comment: '支持的registry列表',
   })
   public registries: string[];
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    comment: 'TGZ包存放的文件夹名',
+    default: 'packages',
+    nullable: true,
+  })
+  public dictionary: string;
 }
