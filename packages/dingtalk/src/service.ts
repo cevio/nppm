@@ -1,12 +1,13 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { createHmac } from 'crypto';
-import { stacks, appidsecret, appid, appkey, appsecret } from './state';
+import { stacks } from './state';
 import { TAccessToken, TOpenID, TUserID, TUserInfo } from './interface';
 import axios, { AxiosResponse } from 'axios';
-import { ConfigCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRequestQuery } from '@typeservice/http';
-import { HttpServiceUnavailableException, HttpMovedPermanentlyException } from '@typeservice/exception';
+import { HttpServiceUnavailableException } from '@typeservice/exception';
+
+const pkgname = require('../package.json').name;
 
 @HTTPController()
 export class Service {
@@ -20,10 +21,6 @@ export class Service {
     return this.npmcore.redis.value;
   }
 
-  private toAuthorizeKey(session: string) {
-    return 'npm:login:' + session;
-  }
-
   @HTTPRouter({
     pathname: '/~/v1/login/dingtalk/authorize',
     methods: 'GET'
@@ -32,10 +29,11 @@ export class Service {
     @HTTPRequestQuery('code') code: string,
     @HTTPRequestQuery('state') state: string,
   ) {
+    const { appid, appkey, appsecret, appidsecret } = this.npmcore.loadPluginState(pkgname);
     const result = stacks.get(state);
-    const access_token = await this.getAccessToken();
+    const access_token = await this.getAccessToken(appkey, appsecret);
     result.status = 1;
-    const { unionid, openid } = await this.getOpenID(code);
+    const { unionid, openid } = await this.getOpenID(code, appid, appidsecret);
     result.status = 2;
     const userid = await this.getUserId(access_token, unionid);
     result.status = 3;
@@ -45,14 +43,14 @@ export class Service {
     throw await this.npmcore.setLoginAuthorize(state);
   }
 
-  private async getAccessToken() {
+  private async getAccessToken(appkey: string, appsecret: string) {
     const res = await axios.get<any, AxiosResponse<TAccessToken>>(`https://oapi.dingtalk.com/gettoken?appkey=${appkey}&appsecret=${appsecret}`);
     const data = res.data;
     if (data.errcode > 0) throw new HttpServiceUnavailableException(data.errmsg);
     return data.access_token;
   }
 
-  private async getOpenID(code: string) {
+  private async getOpenID(code: string, appid: string, appidsecret: string) {
     const timestamp = Date.now();
     const signature = this.signature(timestamp, appidsecret);
     const url = `https://oapi.dingtalk.com/sns/getuserinfo_bycode?accessKey=${appid}&timestamp=${timestamp}&signature=${signature}`;

@@ -1,7 +1,7 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { HttpServiceUnavailableException } from '@typeservice/exception';
-import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware } from '@typeservice/http';
+import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware } from '@nppm/utils';
 
 @HTTPController()
@@ -58,5 +58,30 @@ export class HttpPluginService {
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public getAllPlugins() {
     return this.npmcore.getPlugins();
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugin/:pkg/configs',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public getPluginConfigs(@HTTPRequestParam('pkg') name: string) {
+    return this.npmcore.loadPluginConfigs(name);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugin/:pkg/configs',
+    methods: 'PUT'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public savePluginConfigs(
+    @HTTPRequestParam('pkg') name: string,
+    @HTTPRequestBody() body: Record<string, any>,
+  ) {
+    return this.npmcore.savePluginConfigs(name, body);
   }
 }

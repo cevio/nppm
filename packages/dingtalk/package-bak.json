@@ -35,7 +35,7 @@
     {
       "type": "input",
       "key": "appid",
-      "value": "dingoauqykufg1t7afqmtp",
+      "value": null,
       "placeholder": "请输入钉钉开放平台获取到的APPID",
       "title": "App ID",
       "width": "100%"
@@ -43,7 +43,7 @@
     {
       "type": "input",
       "key": "appkey",
-      "value": "dingr6eh1fizaidjmhpk",
+      "value": null,
       "placeholder": "请输入钉钉开放平台获取到的APPKEY",
       "title": "App Key",
       "width": "100%"
@@ -51,7 +51,7 @@
     {
       "type": "input",
       "key": "appsecret",
-      "value": "v1BQiOoONRDWP4xlN27BJQajXCU46sjfjgf6RaKnTBpDXrzKfIvLKkXQTxYUFUj8",
+      "value": null,
       "placeholder": "请输入钉钉开放平台获取到的APPSECRET",
       "title": "App Secret",
       "width": "100%"
@@ -59,10 +59,51 @@
     {
       "type": "input",
       "key": "appidsecret",
-      "value": "Kkqsdt8mHALUkPmTMH6go2XB_OxGN6Yoa2ktxNuRgVe1wp7c988Plx6j-KecyChO",
+      "value": null,
       "placeholder": "请输入钉钉开放平台获取到的APPKIDSECRET",
       "title": "App ID Secret",
       "width": "100%"
+    },
+    {
+      "type": "select",
+      "key": "abc",
+      "value": 0,
+      "placeholder": "test placeholder",
+      "title": "测试select",
+      "width": 300,
+      "fields": [
+        { "label": "default", "value": 0 },
+        { "label": "test", "value": 1 }
+      ]
+    },
+    {
+      "type": "radio",
+      "key": "def",
+      "value": 0,
+      "title": "测试radio",
+      "fields": [
+        { "label": "default", "value": 0 },
+        { "label": "test", "value": 1 }
+      ]
+    },
+    {
+      "type": "switch",
+      "key": "xyz",
+      "value": 0,
+      "title": "测试switch",
+      "placeholder": ["是", "否"]
+    },
+    {
+      "type": "checkbox",
+      "key": "ttt",
+      "value": [],
+      "title": "测试checkbox",
+      "span": 24,
+      "gutter": [0, 16],
+      "fields": [
+        { "label": "default", "value": 0 },
+        { "label": "test", "value": 1 }
+      ]
     }
   ]
 }

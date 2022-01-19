@@ -1,5 +1,5 @@
 import { resolve, dirname } from 'path';
-import { existsSync, symlinkSync } from 'fs';
+import { existsSync, symlinkSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { interfaces } from 'inversify';
 import { Configs } from './configs';
@@ -21,7 +21,12 @@ import {
   ORM_INSTALLED,
   REDIS_INSTALLED
 } from '@nppm/utils';
-import { HttpServiceUnavailableException, HttpMovedPermanentlyException, HttpOKException } from '@typeservice/exception';
+import { 
+  HttpServiceUnavailableException, 
+  HttpMovedPermanentlyException, 
+  HttpOKException, 
+  HttpNotFoundException,
+} from '@typeservice/exception';
 
 export * from './configs';
 export * from './interface';
@@ -104,7 +109,6 @@ export class NPMCore {
     const key = await new Promise<string>((resolved, reject) => {
       const args: string[] = ['install', app];
       if (registry) args.push('--registry=' + registry);
-      logger.warn('install:', 'npm', args, { cwd: this.HOME })
       const ls = spawn('npm', args, { cwd: this.HOME });
       ls.on('error', e => logger.error(e));
       ls.stdout.on('data', m => logger.info(m.toString()));
@@ -193,5 +197,32 @@ export class NPMCore {
       }
     }
     return new HttpOKException();
+  }
+
+  public loadPluginConfigs(name: string) {
+    if (!this.applications.has(name)) throw new HttpNotFoundException('找不到插件');
+    const state = this.applications.get(name);
+    if (!state.plugin_configs) state.plugin_configs = [];
+    return state.plugin_configs;
+  }
+
+  public loadPluginState(name: string) {
+    if (!this.applications.has(name)) throw new HttpNotFoundException('找不到插件');
+    const state = this.applications.get(name);
+    if (!state.plugin_configs) state.plugin_configs = [];
+    const out: Record<string, any> = {};
+    state.plugin_configs.forEach(config => out[config.key] = config.value);
+    return out;
+  }
+
+  public savePluginConfigs(name: string, data: Record<string, any>) {
+    if (!this.applications.has(name)) throw new HttpNotFoundException('找不到插件');
+    const state = this.applications.get(name);
+    if (!state.plugin_configs) state.plugin_configs = [];
+    const dictionary = resolve(this.HOME, 'node_modules', name);
+    const pkgfilename = resolve(dictionary, 'package.json');
+    if (!existsSync(pkgfilename)) throw new HttpNotFoundException('找不到插件信息文件');
+    state.plugin_configs.forEach(config => config.value = data[config.key] === undefined ? null : data[config.key]);
+    writeFileSync(pkgfilename, JSON.stringify(state, null, 2), 'utf8');
   }
 }
