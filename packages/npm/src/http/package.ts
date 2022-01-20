@@ -7,7 +7,7 @@ import { NPMCore } from '@nppm/core';
 import { ConfigCacheAble } from '@nppm/cache';
 import { TPackageMaintainerState } from './maintainer';
 import { DependencyEntity, KeywordEntity, MaintainerEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
-import { ensureDirSync, writeFileSync, unlinkSync, existsSync } from 'fs-extra';
+import { ensureDirSync, writeFileSync, unlinkSync, existsSync, createReadStream } from 'fs-extra';
 import { Repository } from 'typeorm';
 import { PackageEntity } from '@nppm/entity';
 import { nanoid } from 'nanoid';
@@ -149,7 +149,6 @@ export class HttpPackageService {
       const oldCodes = versions.map(version => version.code);
       const newCodes = Object.keys(body.versions)
       const { removes } = diff(oldCodes, newCodes);
-      console.log('delete version code', oldCodes, newCodes, removes)
       if (removes.length !== 1) throw new HttpUnprocessableEntityException('unpublish package version faild');
 
       const removeCode = removes[0];
@@ -268,6 +267,24 @@ export class HttpPackageService {
     } finally {
       await runner.release();
     }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/download/:rev.tgz',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
+  @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
+  @HTTPRouterMiddleware(NpmCommanderLimit('install'))
+  public async download(@HTTPRequestParam('rev') key: string) {
+    const Version = this.connection.getRepository(VersionEntity);
+    const version = await Version.findOne({ rev: key });
+
+    if (!version) throw new HttpNotFoundException();
+    const HOME = this.npmcore.HOME;
+    const configs = await ConfigCacheAble.get(null, this.connection);
+    const file = resolve(HOME, configs.dictionary || 'packages', version.tarball);
+    return createReadStream(file);
   }
 
   private async deprecate(body: TPackagePublishState, user: UserEntity) {
