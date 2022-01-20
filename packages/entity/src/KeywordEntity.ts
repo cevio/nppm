@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 
 @Entity({ name: 'npm_keywords' })
 @Index(['vid'])
+@Index(['pid'])
 @Index(['gmt_create'])
 @Index(['gmt_modified'])
 export class KeywordEntity {
@@ -13,6 +14,12 @@ export class KeywordEntity {
     comment: '版本ID'
   })
   public vid: number;
+
+  @Column({
+    type: 'integer',
+    comment: '包ID'
+  })
+  public pid: number;
 
   @Column({
     type: 'varchar',

@@ -14,7 +14,7 @@ export class HttpMaintainerService {
 
   public async createNewMaintainer(pid: number, uid: number, Maintainer?: Repository<MaintainerEntity>) {
     Maintainer = Maintainer || this.connection.getRepository(MaintainerEntity);
-    const count = await Maintainer.count({ pid, uid });
+    let count = await Maintainer.count({ pid, uid });
     if (!count) {
       const maintainer = new MaintainerEntity();
       maintainer.gmt_create = new Date();
@@ -33,6 +33,11 @@ export class HttpMaintainerService {
   public getMaintainersByPackage(pid: number, Maintainer?: Repository<MaintainerEntity>) {
     Maintainer = Maintainer || this.connection.getRepository(MaintainerEntity);
     return Maintainer.find({ pid });
+  }
+
+  public removeAll(pid: number, Maintainer?: Repository<MaintainerEntity>) {
+    Maintainer = Maintainer || this.connection.getRepository(MaintainerEntity);
+    return Maintainer.delete({ pid });
   }
 }
 

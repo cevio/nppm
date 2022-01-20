@@ -15,6 +15,7 @@ export class HttpDependencyService {
 
   public async createNewVersionDependencies(
     vid: number, 
+    pid: number,
     dependencies: TPackageVersionState['dependencies'] = {},
     Dependency?: Repository<DependencyEntity>
   ) {
@@ -27,7 +28,18 @@ export class HttpDependencyService {
       dependency.pathname = key;
       dependency.value = value;
       dependency.vid = vid;
+      dependency.pid = pid;
       await Dependency.save(dependency);
     }
+  }
+
+  public removeDenpenencyByVid(vid: number, Dependency?: Repository<DependencyEntity>) {
+    Dependency = Dependency || this.connection.getRepository(DependencyEntity);
+    return Dependency.delete({ vid });
+  }
+
+  public removeAll(pid: number, Dependency?: Repository<DependencyEntity>) {
+    Dependency = Dependency || this.connection.getRepository(DependencyEntity);
+    return Dependency.delete({ pid });
   }
 }

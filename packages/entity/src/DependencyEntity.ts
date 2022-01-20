@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 
 @Entity({ name: 'npm_dependencies' })
 @Index(['vid'])
+@Index(['pid'])
 @Index(['pathname'])
 @Index(['gmt_create'])
 @Index(['gmt_modified'])
@@ -14,6 +15,12 @@ export class DependencyEntity {
     comment: '版本ID'
   })
   public vid: number;
+
+  @Column({
+    type: 'integer',
+    comment: '包ID'
+  })
+  public pid: number;
 
   @Column({
     type: 'varchar',

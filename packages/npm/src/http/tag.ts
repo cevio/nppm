@@ -3,6 +3,7 @@ import { NPMCore } from '@nppm/core';
 import { HTTPController } from '@typeservice/http';
 import { Repository } from 'typeorm';
 import { TagEntity } from '@nppm/entity';
+import { HttpUnprocessableEntityException } from '@typeservice/exception';
 
 @HTTPController()
 export class HttpTagService {
@@ -14,21 +15,35 @@ export class HttpTagService {
 
   public async createNewDistTag(pid: number, vid: number, name: string, Tag?: Repository<TagEntity>) {
     Tag = Tag || this.connection.getRepository(TagEntity);
-    const count = await Tag.count({ namespace: name, pid });
-    if (!count) {
-      const tag = new TagEntity();
+    let tag = await Tag.findOne({ namespace: name, pid });
+    if (!tag) {
+      tag = new TagEntity();
       tag.gmt_create = new Date();
-      tag.gmt_modified = new Date();
-      tag.namespace = name;
+      tag.namespace = name || 'latest';
       tag.pid = pid;
-      tag.vid = vid;
-      await Tag.save(tag);
     }
+    tag.vid = vid;
+    tag.gmt_modified = new Date();
+    await Tag.save(tag);
   }
 
   public async getLatestVersion(pid: number, Tag?: Repository<TagEntity>) {
     Tag = Tag || this.connection.getRepository(TagEntity);
     const tag = await Tag.findOne({ namespace: 'latest', pid });
     if (tag) return tag.vid;
+  }
+
+  public async removeTagByVid(pid: number, vid: number, Tag?: Repository<TagEntity>) {
+    Tag = Tag || this.connection.getRepository(TagEntity);
+    const tag = await Tag.findOne({ vid, pid });
+    if (tag) {
+      if (tag.namespace === 'latest') throw new HttpUnprocessableEntityException('cannot delete tag by name of latest');
+      await Tag.delete(tag.id);
+    }
+  }
+
+  public removeAll(pid: number, Tag?: Repository<TagEntity>) {
+    Tag = Tag || this.connection.getRepository(TagEntity);
+    return Tag.delete({ pid });
   }
 }

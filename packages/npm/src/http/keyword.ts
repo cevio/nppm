@@ -12,7 +12,7 @@ export class HttpKeywordService {
     return this.npmcore.orm.value;
   }
 
-  public async createNewVersionKeywords(vid: number, keywords: string[] = [], Keyword?: Repository<KeywordEntity>) {
+  public async createNewVersionKeywords(vid: number, pid: number, keywords: string[] = [], Keyword?: Repository<KeywordEntity>) {
     Keyword = Keyword || this.connection.getRepository(KeywordEntity);
     for (let i = 0; i < keywords.length; i++) {
       const keyword = new KeywordEntity();
@@ -20,7 +20,18 @@ export class HttpKeywordService {
       keyword.gmt_modified = new Date();
       keyword.name = keywords[i];
       keyword.vid = vid;
+      keyword.pid = pid;
       await Keyword.save(keyword);
     }
+  }
+
+  public removeKeywordByVid(vid: number, Keyword?: Repository<KeywordEntity>) {
+    Keyword = Keyword || this.connection.getRepository(KeywordEntity);
+    return Keyword.delete({ vid });
+  }
+
+  public removeAll(pid: number, Keyword?: Repository<KeywordEntity>) {
+    Keyword = Keyword || this.connection.getRepository(KeywordEntity);
+    return Keyword.delete({ pid });
   }
 }

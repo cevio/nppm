@@ -4,6 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 @Index(['pathname'], { unique: true })
 @Index(['scope'])
 @Index(['versions'])
+@Index(['rev'], { unique: true })
 @Index(['maintainers'])
 @Index(['gmt_create'])
 @Index(['gmt_modified'])

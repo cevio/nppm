@@ -4,6 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 @Index(['uid'])
 @Index(['pid'])
 @Index(['code'])
+@Index(['rev'], { unique: true })
 @Index(['gmt_create'])
 @Index(['gmt_modified'])
 export class VersionEntity {
@@ -107,7 +108,13 @@ export class VersionEntity {
     comment: '废弃内容',
     nullable: true
   })
-  public deprecated: string
+  public deprecated: string;
+
+  @Column({
+    type: 'json',
+    comment: '版本信息',
+  })
+  public info: any;
 
   @Column({
     type: 'timestamp',

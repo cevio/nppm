@@ -6,6 +6,9 @@ import { TPackageMaintainerState } from './maintainer';
 import { VersionEntity } from '@nppm/entity';
 import { nanoid } from 'nanoid';
 import { TPackageStreamState } from './package';
+import { versionAllowed } from '@nppm/utils';
+import { HttpUnprocessableEntityException } from '@typeservice/exception';
+import { MD5 } from 'crypto-js';
 
 @HTTPController()
 export class HttpVersionService {
@@ -32,7 +35,7 @@ export class HttpVersionService {
     version.pid = pid;
     version.readme = state.readme;
     version.repository = state.repository || { type: null, url: null };
-    version.rev = nanoid();
+    version.rev = MD5(nanoid()).toString();
     version.shasum = state.dist.shasum;
     version.tarball = filename;
     version.uid = uid;
@@ -42,6 +45,29 @@ export class HttpVersionService {
     version.deprecated = null;
     version.description = state.description;
     version.gmt_create = new Date();
+    version.info = {
+      keywords: state.keywords,
+      dist: state.dist,
+      dependencies: state.dependencies,
+      // @ts-ignore
+      engines: state.engines,
+      // @ts-ignore
+      _hasShrinkwrap: state._hasShrinkwrap,
+      // @ts-ignore
+      _nodeVersion: state._nodeVersion,
+      // @ts-ignore
+      _npmOperationalInternal: state._npmOperationalInternal,
+      // @ts-ignore
+      _npmVersion: state._npmVersion,
+      // @ts-ignore
+      bugs: state.bugs,
+      // @ts-ignore
+      directories: state.directories,
+      // @ts-ignore
+      main: state.main,
+      // @ts-ignore
+      module: state.module,
+    };
     return Version.save(version);
   }
 
@@ -71,26 +97,36 @@ export class HttpVersionService {
     repository = repository || this.connection.getRepository(VersionEntity)
     const versionEntities = await this.getVersionsByPid(pid, repository);
     const versions = versionEntities.map(ver => ver.code).sort();
-    const versionSemver = this.formatVersionSemver(version);
-    const vers: string[] = [];
-    versions.forEach(version => {
-      const { major, minor, patch } = this.formatVersionSemver(version);
-      if (Number(versionSemver.major) >= Number(major) && Number(versionSemver.minor) >= Number(minor) && Number(versionSemver.patch) >= Number(patch)) {
-        vers.push(version);
-      }
-    })
-    return true;
+    return versionAllowed(version, versions);
   }
 
-  private formatVersionSemver(version: string) {
-    const sp = version.split('-');
-    const a = sp[0];
-    const b = sp[1];
-    const c = a.split('.');
-    const major = c[0];
-    const minor = c[1];
-    const patch = c[2];
-    return { major, minor, patch, prerelease: b }
+  public async updateDeprecated(rev: string, msg: string, Version?: Repository<VersionEntity>) {
+    Version = Version || this.connection.getRepository(VersionEntity);
+    const version = await Version.findOne({ rev });
+    if (!version) throw new HttpUnprocessableEntityException('can not find the version rev of ' + rev);
+    if (version.deprecated !== msg) {
+      version.deprecated = msg;
+      version.gmt_modified = new Date();
+      await Version.save(version);
+    }
+  }
+
+  public async removeVersionByCode(pid: number, code: string, Version?: Repository<VersionEntity>) {
+    Version = Version || this.connection.getRepository(VersionEntity);
+    const version = await Version.findOne({ pid, code });
+    if (!version) throw new HttpUnprocessableEntityException('can not find the version code of ' + code);
+    await Version.delete(version.id);
+    return version;
+  }
+
+  public getVersionByRev(rev: string, Version?: Repository<VersionEntity>) {
+    Version = Version || this.connection.getRepository(VersionEntity);
+    return Version.findOne({ rev });
+  }
+
+  public removeAll(pid: number, Version?: Repository<VersionEntity>) {
+    Version = Version || this.connection.getRepository(VersionEntity);
+    return Version.delete({ pid });
   }
 }
 
@@ -116,11 +152,5 @@ export interface TPackageVersionState {
     tarball: string,
   },
   deprecated?: string,
-}
-
-interface TVersionCompareTree {
-  items?: {
-    [id:string]: TVersionCompareTree
-  },
-  max: number,
+  rev?: string,
 }

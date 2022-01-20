@@ -10,3 +10,4 @@ export * from './cache';
 export * from './http_radox';
 export * from './decorators';
 export * from './middlewares';
+export * from './version'

@@ -110,11 +110,11 @@ export class CacheAble<
     return data;
   }
 
-  public async get(args?: T, ...extras: R) {
+  public async get(args?: T, ...extras: R): Promise<O> {
     let needUpdateMemory = false;
     if (this.memory) {
       const value = this.getMemoryValue(args);
-      if (value !== undefined) return value;
+      if (value !== undefined) return value as O;
       needUpdateMemory = true;
     }
     const path = this.toKey(args);
