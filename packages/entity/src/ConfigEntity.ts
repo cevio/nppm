@@ -40,4 +40,11 @@ export class ConfigEntity {
     nullable: true,
   })
   public dictionary: string;
+
+  @Column({
+    type: 'bool',
+    comment: '是否开放注册',
+    default: false
+  })
+  public registerable: boolean;
 }
