@@ -32,6 +32,7 @@ import {
   OnlyRunInCommanderLineInterface, 
   UserInfoMiddleware, 
   UserMustBeLoginedMiddleware, 
+  UserNotForbiddenMiddleware, 
   versionValid,
 } from '@nppm/utils';
 
@@ -69,6 +70,7 @@ export class HttpPackagePublishService {
   @HTTPRouterMiddleware(NpmCommanderLimit('publish', 'deprecate'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public updatePackage(
     @HTTPRequestBody() body: TPackagePublishState,
     @NPMCommander() commander: string,

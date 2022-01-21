@@ -2,7 +2,7 @@ import { inject } from 'inversify';
 import { ConfigCacheAble } from '@nppm/cache';
 import { NPMCore } from '@nppm/core';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestBody } from '@typeservice/http';
-import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware } from '@nppm/utils';
+import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 import { ConfigEntity } from '@nppm/entity';
 import { HttpNotAcceptableException } from '@typeservice/exception';
 
@@ -28,6 +28,7 @@ export class HttpConfigsService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public getWebsiteConfigs() {
     return ConfigCacheAble.get(null, this.connection);
@@ -39,6 +40,7 @@ export class HttpConfigsService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async saveWebsiteConfigs(@HTTPRequestBody() body: TConfigs) {
     if (!body.domain || !body.registries.length || !body.login_code || !body.scopes.length) {

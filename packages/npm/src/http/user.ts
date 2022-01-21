@@ -390,6 +390,7 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async getUsers(
     @HTTPRequestQuery('page') page: string,
@@ -418,6 +419,7 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async changeUserAdminStatus(
     @HTTPRequestParam('uid') uid: string,
@@ -437,6 +439,7 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async changeUserAdminForbiddenStatus(
     @HTTPRequestParam('uid') uid: string,
@@ -456,6 +459,7 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async deleteUserByAdmin(
     @HTTPRequestParam('uid') uid: string,

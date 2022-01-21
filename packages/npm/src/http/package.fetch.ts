@@ -7,7 +7,7 @@ import { PackageEntity } from '@nppm/entity';
 import { HttpNotFoundException, HttpException } from '@typeservice/exception';
 import { PackageCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
-import { createNPMErrorCatchMiddleware, OnlyRunInCommanderLineInterface, UserInfoMiddleware, UserMustBeLoginedMiddleware } from '@nppm/utils';
+import { createNPMErrorCatchMiddleware, OnlyRunInCommanderLineInterface, UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 
 @HTTPController()
 export class HttpPackageFetchService {
@@ -31,6 +31,7 @@ export class HttpPackageFetchService {
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public async readPackage(@HTTPRequestParam('pkg') pkg: string) {
     const Packages = this.connection.getRepository(PackageEntity);
     const pack = await Packages.findOne({ pathname: pkg });

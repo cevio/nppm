@@ -31,7 +31,8 @@ import {
   NpmCommanderLimit, 
   OnlyRunInCommanderLineInterface, 
   UserInfoMiddleware, 
-  UserMustBeLoginedMiddleware, 
+  UserMustBeLoginedMiddleware,
+  UserNotForbiddenMiddleware, 
 } from '@nppm/utils';
 
 @HTTPController()
@@ -70,6 +71,7 @@ export class HttpPackageUnPublishService {
   @HTTPRouterMiddleware(NpmCommanderLimit('unpublish', 'owner'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public unpublishSinglePackage(
     @HTTPRequestBody() body: TPackagePublishState | TOwnerState,
     @NPMCommander() commander: string,
@@ -144,6 +146,7 @@ export class HttpPackageUnPublishService {
   @HTTPRouterMiddleware(NpmCommanderLimit('unpublish'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public async removeTGZ(
     @HTTPRequestParam('rev') rev: string,
     @HTTPRequestParam('key') key: string,
@@ -186,6 +189,7 @@ export class HttpPackageUnPublishService {
   @HTTPRouterMiddleware(NpmCommanderLimit('unpublish'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public unpublishAll(
     @HTTPRequestParam('pkg') pkg: string,
     @HTTPRequestParam('key') key: string,

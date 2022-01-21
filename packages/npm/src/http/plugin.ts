@@ -2,7 +2,7 @@ import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { HttpServiceUnavailableException } from '@typeservice/exception';
 import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
-import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware } from '@nppm/utils';
+import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 
 @HTTPController()
 export class HttpPluginService {
@@ -23,6 +23,7 @@ export class HttpPluginService {
   // /Users/evioshen/code/github/nppm/packages/dingtalk
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public async installPlugin(@HTTPRequestBody() body: { name: string, registry?: string, dev?: boolean }) {
     const suceess = await this.npmcore.install(body.name, body.dev, body.registry);
@@ -36,6 +37,7 @@ export class HttpPluginService {
   // /Users/evioshen/code/github/nppm/packages/dingtalk
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public unInstallPlugin(@HTTPRequestParam('pkg') name: string) {
     return this.npmcore.uninstall(name);
@@ -55,6 +57,7 @@ export class HttpPluginService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public getAllPlugins() {
     return this.npmcore.getPlugins();
@@ -66,6 +69,7 @@ export class HttpPluginService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public getPluginConfigs(@HTTPRequestParam('pkg') name: string) {
     return this.npmcore.loadPluginConfigs(name);
@@ -77,6 +81,7 @@ export class HttpPluginService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
   public savePluginConfigs(
     @HTTPRequestParam('pkg') name: string,
