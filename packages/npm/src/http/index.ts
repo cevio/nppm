@@ -6,9 +6,14 @@ import { HttpConfigsService } from './configs';
 import { HttpDependencyService } from './dependency';
 import { HttpKeywordService } from './keyword';
 import { HttpMaintainerService } from './maintainer';
-import { HttpPackageService } from './package';
 import { HttpTagService } from './tag';
 import { HttpVersionService } from './version';
+import { HttpPackageService } from './package';
+import { HttpPackageDownloadService } from './package.download';
+import { HttpPackageFetchService } from './package.fetch';
+import { HttpPackagePublishService } from './package.publish';
+import { HttpPackageUnPublishService } from './package.unpublish';
+import { HttpOwnerService } from './owner';
 
 export {
   HttpSetupService,
@@ -21,6 +26,10 @@ export {
   HttpPackageService,
   HttpTagService,
   HttpVersionService,
+  HttpPackageDownloadService,
+  HttpPackagePublishService,
+  HttpPackageUnPublishService,
+  HttpOwnerService,
 }
 
 export default [
@@ -34,4 +43,9 @@ export default [
   HttpPackageService,
   HttpTagService,
   HttpVersionService,
+  HttpPackageDownloadService,
+  HttpPackageFetchService,
+  HttpPackagePublishService,
+  HttpPackageUnPublishService,
+  HttpOwnerService,
 ] as interfaces.Newable<any>[];

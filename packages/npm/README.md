@@ -1,11 +1,6 @@
 # `@nppm/npm`
 
-  > TODO: description
-  
-  ## Usage
-  
-  ```
-  const container = require('@nppm/npm');
-  
-  // TODO: DEMONSTRATE API
-  ```
+## TODO
+
+1. `npm hook`
+2. `npm token`

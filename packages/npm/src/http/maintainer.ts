@@ -39,6 +39,12 @@ export class HttpMaintainerService {
     Maintainer = Maintainer || this.connection.getRepository(MaintainerEntity);
     return Maintainer.delete({ pid });
   }
+
+  public async removeOne(pid: number, uid: number, Maintainer?: Repository<MaintainerEntity>) {
+    Maintainer = Maintainer || this.connection.getRepository(MaintainerEntity);
+    const maintainer = await Maintainer.findOne({ pid, uid });
+    await Maintainer.delete(maintainer.id);
+  }
 }
 
 export interface TPackageMaintainerState {

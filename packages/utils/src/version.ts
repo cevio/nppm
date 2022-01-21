@@ -69,7 +69,6 @@ export function versionAllowed(version: string, versions: string[]): [boolean, s
         for (const v of patchs) {
           const p = `${major}.${minor}.${patch}${v}`;
           const s = gte(p, version);
-          console.log('-', p, version, s);
           if (s) return [false, p];
         }
         return [true];

@@ -18,10 +18,14 @@ lifecycle
   .createServer(npmcore.configs.createConfigServer())
   .createServer(createHttpServer({
     port: Number(schema.port),
-    jsonLimit: '500mb',
     middlewares: [createErrorCatchMiddleware, createDevelopmentMiddleware],
     services: HttpServices,
     keys: ['nppm'],
+    bodyParser: {
+      enableTypes: ['json', 'text'],
+      jsonLimit: '500mb',
+      strict: false,
+    }
   }))
   .createServer(npmcore.createORMServer())
   .createServer(npmcore.createRedisServer())

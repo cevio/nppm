@@ -11,19 +11,17 @@ export const HTTP_APPLICATION_CONTEXT = createContext<HTTP>();
 
 export interface TCreateHttpServerProps {
   readonly port: number,
-  readonly jsonLimit?: string,
   readonly middlewares?: Middleware[],
   readonly services?: interfaces.Newable<unknown>[],
   readonly keys?: string[],
+  readonly bodyParser?: bodyParser.Options
 }
 
 export function createHttpServer(props: TCreateHttpServerProps) {
   return async () => {
     const app = new HTTP(container);
     app.keys = props.keys;
-    app.use(bodyParser(props.jsonLimit ? {
-      jsonLimit: props.jsonLimit,
-    } : undefined));
+    app.use(bodyParser(props.bodyParser));
     if (props.middlewares && props.middlewares.length) {
       props.middlewares.forEach(middleware => app.use(middleware));
     }

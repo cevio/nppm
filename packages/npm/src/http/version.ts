@@ -5,7 +5,7 @@ import { HTTPController } from '@typeservice/http';
 import { TPackageMaintainerState } from './maintainer';
 import { VersionEntity } from '@nppm/entity';
 import { nanoid } from 'nanoid';
-import { TPackageStreamState } from './package';
+import { TPackageStreamState } from './package.interface';
 import { versionAllowed } from '@nppm/utils';
 import { HttpUnprocessableEntityException } from '@typeservice/exception';
 import { MD5 } from 'crypto-js';
@@ -109,6 +109,11 @@ export class HttpVersionService {
       version.gmt_modified = new Date();
       await Version.save(version);
     }
+  }
+
+  public getVersionByCode(pid: number, code: string, Version?: Repository<VersionEntity>) {
+    Version = Version || this.connection.getRepository(VersionEntity);
+    return Version.findOne({ pid, code });
   }
 
   public async removeVersionByCode(pid: number, code: string, Version?: Repository<VersionEntity>) {
