@@ -1,9 +1,10 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
-import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestState, HTTPRequestQuery } from '@typeservice/http';
+import { PackageCacheAble } from '@nppm/cache';
+import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestState, HTTPRequestQuery, HTTPRequestBody, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 import { PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
-import { HttpNotAcceptableException } from '@typeservice/exception';
+import { HttpNotAcceptableException, HttpNotFoundException, HttpForbiddenException } from '@typeservice/exception';
 
 @HTTPController()
 export class HttpPackageService {
@@ -60,7 +61,6 @@ export class HttpPackageService {
     const count = await builder.clone().getCount();
     builder.offset((_page - 1) * _size).limit(_size);
     const packages: TPackage[] = await builder.getRawMany();
-    console.log(packages.length)
 
     const pids = packages.map(pack => pack.id);
 
@@ -91,5 +91,28 @@ export class HttpPackageService {
       pack.uid = versions.get(pack.id).uid;
       return pack;
     }), count] as const;
+  }
+
+  @HTTPRouter({
+    pathname: '/~/packages/:id(\\d+)/transfer',
+    methods: 'POST'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  public async transfer(
+    @HTTPRequestParam('id') id: string,
+    @HTTPRequestState('user') user: UserEntity,
+    @HTTPRequestBody() body: { uid: number }
+  ) {
+    const pid = Number(id);
+    const Packages = this.connection.getRepository(PackageEntity);
+    const pack = await Packages.findOne(pid);
+    if (!pack) throw new HttpNotFoundException('cannot find the package id of ' + pid);
+    if (pack.uid !== user.id) throw new HttpForbiddenException('you are not the admin of this package');
+    pack.uid = body.uid;
+    pack.gmt_modified = new Date();
+    await Packages.save(pack);
+    return await PackageCacheAble.build({ pkg: pack.pathname }, this.connection);
   }
 }

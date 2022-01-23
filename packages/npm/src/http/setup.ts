@@ -74,7 +74,8 @@ export class HttpSetupService {
         _configs.login_code = 'default';
         _configs.registries = ["https://registry.npm.taobao.org/", "https://registry.npmjs.org/"];
         _configs.scopes = [];
-        _configs.dictionary = 'packages';
+        _configs.dictionary = 'node_packages';
+        _configs.registerable = true;
         configs = await ConfigRepository.save(_configs);
       }
     } else {
