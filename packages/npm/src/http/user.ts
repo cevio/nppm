@@ -51,7 +51,9 @@ export class HttpUserService {
     return this.npmcore.redis.value;
   }
 
-  private insertUser<T extends Omit<Partial<UserEntity>, 'id'>>(state: T, type: TLoginType) {
+  private async insertUser<T extends Omit<Partial<UserEntity>, 'id'>>(state: T, type: TLoginType) {
+    const configs = await ConfigCacheAble.get(null, this.connection);
+    if (!configs.registerable) throw new HttpForbiddenException('npm stop register');
     const user = new UserEntity();
     return this.updateUser(user, state, type);
   }

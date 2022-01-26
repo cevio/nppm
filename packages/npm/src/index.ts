@@ -1,11 +1,10 @@
 import HttpServices from './http';
 import { TSchema } from './interface';
 import { createSchemaServer } from './schema';
-import { createErrorCatchMiddleware } from './error';
-import { createDevelopmentMiddleware } from './dev';
 import { NPMCore } from '@nppm/core';
 import { createProcess, localhost } from '@typeservice/process';
 import { logger, createHttpServer, container } from '@nppm/utils';
+import { createDevelopmentMiddleware, createErrorCatchMiddleware } from './middlewares';
 import { ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 
 const npmcore = new NPMCore();

@@ -19,7 +19,7 @@ export class HttpPackageFetchService {
   }
 
   /**
-   * 获取模块信息
+   * 获取模块信息 - 仅命令行
    * @param pkg 
    * @returns 
    */
@@ -29,9 +29,6 @@ export class HttpPackageFetchService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(UserInfoMiddleware)
-  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
-  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public async readPackage(@HTTPRequestParam('pkg') pkg: string) {
     const Packages = this.connection.getRepository(PackageEntity);
     const pack = await Packages.findOne({ pathname: pkg });
@@ -57,5 +54,75 @@ export class HttpPackageFetchService {
       })
     }, Promise.reject(new HttpNotFoundException(this.NotFoundResponse)));
     return res.data;
+  }
+
+  /**
+   * 获取带命名空间的模块信息 - 整个
+   * @param scope 
+   * @param pkg 
+   * @returns 
+   */
+  @HTTPRouter({
+    pathname: '/~/package/@:scope/:pkg',
+    methods: 'GET'
+  })
+  public readWebScopedPackage(
+    @HTTPRequestParam('scope') scope: string,
+    @HTTPRequestParam('pkg') pkg: string,
+  ) {
+    return this.readPackage('@' + scope + '/' + pkg);
+  }
+
+  /**
+   * 获取带命名空间的模块信息 - 版本
+   * @param scope 
+   * @param pkg 
+   * @param version 
+   * @returns 
+   */
+  @HTTPRouter({
+    pathname: '/~/package/@:scope/:pkg/:version',
+    methods: 'GET'
+  })
+  public async readWebScopedPackageVersion(
+    @HTTPRequestParam('scope') scope: string,
+    @HTTPRequestParam('pkg') pkg: string,
+    @HTTPRequestParam('version') version: string,
+  ) {
+    const state = await this.readWebScopedPackage(scope, pkg);
+    const tagVersion = state['dist-tags'][version];
+    return tagVersion ? state.versions[tagVersion] : state.versions[version];
+  }
+
+  /**
+   * 获取普通模块信息 - 整个
+   * @param pkg 
+   * @returns 
+   */
+  @HTTPRouter({
+    pathname: '/~/package/:pkg',
+    methods: 'GET'
+  })
+  public readWebNormalPackage(@HTTPRequestParam('pkg') pkg: string) {
+    return this.readPackage(pkg);
+  }
+
+  /**
+   * 获取普通模块信息 - 版本
+   * @param pkg 
+   * @param version 
+   * @returns 
+   */
+   @HTTPRouter({
+    pathname: '/~/package/:pkg/:version',
+    methods: 'GET'
+  })
+  public async readWebNormalPackageVersion(
+    @HTTPRequestParam('pkg') pkg: string,
+    @HTTPRequestParam('version') version: string
+  ) {
+    const state = await this.readWebNormalPackage(pkg);
+    const tagVersion = state['dist-tags'][version];
+    return tagVersion ? state.versions[tagVersion] : state.versions[version];
   }
 }

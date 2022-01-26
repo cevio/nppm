@@ -10,7 +10,7 @@ export function NpmCommanderLimit(...commanders: string[]) {
 }
 
 export async function OnlyRunInCommanderLineInterface(ctx: Context, next: Next) {
-  const session = ctx.header['npm-session'];
-  if (!session) throw new HttpNotAcceptableException('Not support api');
+  const useragent = ctx.header['user-agent'];
+  if (!/npm\/\d+\.\d+\.\d+/.test(useragent)) throw new HttpNotAcceptableException('Not support api');
   await next();
 }
