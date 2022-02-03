@@ -6,7 +6,7 @@ import { ConfigCacheAble } from '@nppm/cache';
 import { PackageEntity } from '@nppm/entity';
 import { HttpNotFoundException, HttpException } from '@typeservice/exception';
 import { PackageCacheAble } from '@nppm/cache';
-import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
+import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestParam, HTTPRequestQuery } from '@typeservice/http';
 import { createNPMErrorCatchMiddleware, OnlyRunInCommanderLineInterface, UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 
 @HTTPController()
@@ -16,6 +16,10 @@ export class HttpPackageFetchService {
   private readonly NotFoundResponse = 'not found';
   get connection() {
     return this.npmcore.orm.value;
+  }
+
+  get redis() {
+    return this.npmcore.redis.value;
   }
 
   /**
@@ -29,7 +33,10 @@ export class HttpPackageFetchService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  public async readPackage(@HTTPRequestParam('pkg') pkg: string) {
+  public async readPackage(
+    @HTTPRequestParam('pkg') pkg: string,
+    @HTTPRequestQuery('registry') registry?: string,
+  ) {
     const Packages = this.connection.getRepository(PackageEntity);
     const pack = await Packages.findOne({ pathname: pkg });
     const configs = await ConfigCacheAble.get(null, this.connection);
@@ -39,9 +46,9 @@ export class HttpPackageFetchService {
       for (const key in versions) {
         versions[key].dist.tarball = urlResolve(configs.domain, versions[key].dist.tarball);
       }
-      return result;
+      return this.wrapPackage(result, true);
     }
-    const res = await configs.registries.reduce<Promise<AxiosResponse<any>>>((prev, registry) => {
+    const res = await (registry ? [registry] : configs.registries).reduce<Promise<AxiosResponse<any>>>((prev, registry) => {
       return prev.then((res) => {
         const state = res.data;
         if (state.error) return Promise.reject(new HttpNotFoundException(this.NotFoundResponse));
@@ -53,7 +60,11 @@ export class HttpPackageFetchService {
         return Promise.reject(e);
       })
     }, Promise.reject(new HttpNotFoundException(this.NotFoundResponse)));
-    return res.data;
+    return this.wrapPackage(res.data, false);
+  }
+
+  private wrapPackage(res: any, isNppm: boolean) {
+    return Object.assign(res, { _nppm: isNppm });
   }
 
   /**
@@ -70,7 +81,7 @@ export class HttpPackageFetchService {
     @HTTPRequestParam('scope') scope: string,
     @HTTPRequestParam('pkg') pkg: string,
   ) {
-    return this.readPackage('@' + scope + '/' + pkg);
+    return this.readPackage('@' + scope + '/' + pkg, 'https://registry.npmjs.org/');
   }
 
   /**
@@ -104,7 +115,7 @@ export class HttpPackageFetchService {
     methods: 'GET'
   })
   public readWebNormalPackage(@HTTPRequestParam('pkg') pkg: string) {
-    return this.readPackage(pkg);
+    return this.readPackage(pkg, 'https://registry.npmjs.org/');
   }
 
   /**

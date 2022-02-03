@@ -3,7 +3,7 @@ import { NPMCore } from '@nppm/core';
 import { PackageCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestState, HTTPRequestQuery, HTTPRequestBody, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
-import { PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
+import { MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 import { HttpNotAcceptableException, HttpNotFoundException, HttpForbiddenException } from '@typeservice/exception';
 
 @HTTPController()
@@ -114,5 +114,23 @@ export class HttpPackageService {
     pack.gmt_modified = new Date();
     await Packages.save(pack);
     return await PackageCacheAble.build({ pkg: pack.pathname }, this.connection);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/package/:pkg/maintainers',
+    methods: 'GET'
+  })
+  public async getPrivatePackageMaintainers(@HTTPRequestParam('pkg') pkg: string = ''): Promise<{ name: string, avatar: string, email: string }[]> {
+    if (!pkg.startsWith('@') || !pkg.includes('/')) return [];
+    const Packages = this.connection.getRepository(PackageEntity);
+    const pack = await Packages.findOne({ pathname: pkg });
+    if (!pack) return [];
+    const Maintainer = this.connection.createQueryBuilder(MaintainerEntity, 'm')
+      .leftJoin(UserEntity, 'u', 'u.id=m.uid')
+      .select('u.nickname', 'name')
+      .addSelect('u.email', 'email')
+      .addSelect('u.avatar', 'avatar')
+      .where('m.pid=:pid', { pid: pack.id });
+    return await Maintainer.getRawMany();
   }
 }
