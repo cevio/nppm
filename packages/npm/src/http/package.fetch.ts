@@ -136,4 +136,23 @@ export class HttpPackageFetchService {
     const tagVersion = state['dist-tags'][version];
     return tagVersion ? state.versions[tagVersion] : state.versions[version];
   }
+
+  /**
+   * 获取普通模块信息 - 版本
+   * @param pkg 
+   * @param version 
+   * @returns 
+   */
+   @HTTPRouter({
+    pathname: '/~/package',
+    methods: 'GET'
+  })
+  public async readWebPackage(
+    @HTTPRequestQuery('name') pkg: string,
+    @HTTPRequestQuery('version') version: string
+  ) {
+    const state = await this.readWebNormalPackage(pkg);
+    const tagVersion = state['dist-tags'][version] || version;
+    return tagVersion ? state.versions[tagVersion] : state;
+  }
 }

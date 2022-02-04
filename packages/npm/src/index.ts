@@ -4,7 +4,7 @@ import { createSchemaServer } from './schema';
 import { NPMCore } from '@nppm/core';
 import { createProcess, localhost } from '@typeservice/process';
 import { logger, createHttpServer, container } from '@nppm/utils';
-import { createDevelopmentMiddleware, createErrorCatchMiddleware } from './middlewares';
+import { createDevelopmentMiddleware, createErrorCatchMiddleware, StaticMiddleware } from './middlewares';
 import { ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 
 const npmcore = new NPMCore();
@@ -17,7 +17,7 @@ lifecycle
   .createServer(npmcore.configs.createConfigServer())
   .createServer(createHttpServer({
     port: Number(schema.port),
-    middlewares: [createErrorCatchMiddleware, createDevelopmentMiddleware],
+    middlewares: [StaticMiddleware, createErrorCatchMiddleware, createDevelopmentMiddleware],
     services: HttpServices,
     keys: ['nppm'],
     bodyParser: {

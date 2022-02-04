@@ -1,5 +1,6 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
+import { Like } from 'typeorm'
 import { PackageCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestState, HTTPRequestQuery, HTTPRequestBody, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
@@ -132,5 +133,39 @@ export class HttpPackageService {
       .addSelect('u.avatar', 'avatar')
       .where('m.pid=:pid', { pid: pack.id });
     return await Maintainer.getRawMany();
+  }
+
+  @HTTPRouter({
+    pathname: '/~/package/search',
+    methods: 'GET'
+  })
+  public searchPackage(@HTTPRequestQuery('keyword') keyword: string) {
+    const Packages = this.connection.getRepository(PackageEntity);
+    return Packages.find({
+      pathname: Like('%' + keyword + '%'),
+    })
+  }
+
+  @HTTPRouter({
+    pathname: '/~/package/update/recently',
+    methods: 'GET'
+  })
+  public updateRecently() {
+    const Packages = this.connection.getRepository(PackageEntity);
+    return Packages.createQueryBuilder('p')
+      .leftJoin(UserEntity, 'u', 'u.id=p.uid')
+      .select('p.id', 'id')
+      .addSelect('p.pathname', 'pathname')
+      .addSelect('u.nickname', 'nickname')
+      .addSelect('u.avatar', 'avatar')
+      .addSelect('p.versions', 'versions')
+      .addSelect('p.maintainers', 'maintainers')
+      .addSelect('p.gmt_modified', 'gmt_modified')
+      .orderBy({ 
+        'p.gmt_modified': 'DESC',
+        'p.gmt_create': 'DESC',
+      })
+      .limit(10)
+      .getRawMany();
   }
 }

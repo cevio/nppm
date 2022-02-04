@@ -14,6 +14,7 @@ import { HttpPackageFetchService } from './package.fetch';
 import { HttpPackagePublishService } from './package.publish';
 import { HttpPackageUnPublishService } from './package.unpublish';
 import { HttpOwnerService } from './owner';
+import { HttpDocsService } from './doc';
 
 export {
   HttpSetupService,
@@ -30,6 +31,7 @@ export {
   HttpPackagePublishService,
   HttpPackageUnPublishService,
   HttpOwnerService,
+  HttpDocsService,
 }
 
 export default [
@@ -48,4 +50,5 @@ export default [
   HttpPackagePublishService,
   HttpPackageUnPublishService,
   HttpOwnerService,
+  HttpDocsService,
 ] as interfaces.Newable<any>[];

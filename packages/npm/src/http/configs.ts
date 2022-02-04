@@ -3,8 +3,11 @@ import { ConfigCacheAble } from '@nppm/cache';
 import { NPMCore } from '@nppm/core';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestBody } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
-import { ConfigEntity } from '@nppm/entity';
+import { ConfigEntity, PackageEntity, UserEntity, VersionEntity } from '@nppm/entity';
 import { HttpNotAcceptableException } from '@typeservice/exception';
+import { resolve } from 'path';
+import { readFileSync } from 'fs';
+import { HttpOKException } from '@typeservice/exception';
 
 export interface TConfigs {
   domain: string,
@@ -58,5 +61,35 @@ export class HttpConfigsService {
     configs.registerable = body.registerable;
     configs = await Configs.save(configs);
     return await ConfigCacheAble.build(null, this.connection);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/dashboard',
+    methods: 'GET'
+  })
+  public async dashboard() {
+    const User = this.connection.getRepository(UserEntity);
+    const Packages = this.connection.getRepository(PackageEntity);
+    const Version = this.connection.getRepository(VersionEntity);
+    const [user, pack, version] = await Promise.all([
+      User.count(),
+      Packages.count(),
+      Version.count(),
+    ])
+    return {
+      userCount: user,
+      packageCount: pack,
+      versionCount: version
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/',
+    methods: 'GET'
+  })
+  public theme() {
+    const e = new HttpOKException(readFileSync(resolve(__dirname, '../../theme/index.html')));
+    e.set('content-type', 'text/html')
+    throw e;
   }
 }
