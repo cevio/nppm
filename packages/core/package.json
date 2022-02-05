@@ -1,6 +1,6 @@
 {
   "name": "@nppm/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "node private package manager:core",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/core",
@@ -22,8 +22,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@nppm/cache": "^1.0.1",
-    "@nppm/utils": "^1.0.1",
+    "@nppm/cache": "^1.0.2",
+    "@nppm/utils": "^1.0.2",
     "@types/fs-extra": "^9.0.13",
     "@types/minimist": "^1.2.2",
     "fs-extra": "^10.0.0",
