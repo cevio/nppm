@@ -56,7 +56,6 @@ export class HttpSetupService {
     pathname: '/~/setup/orm',
     methods: 'POST'
   })
-  @HTTPRouterMiddleware(UserInfoMiddleware)
   public async setORMState(
     @HTTPRequestBody() body: TORMConfigs,
     @HTTPRequestState('user') user: UserEntity
