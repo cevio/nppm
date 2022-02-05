@@ -175,7 +175,6 @@ function resolvePath(rootPath: string, relativePath?: string): string {
   }
 
   // path should never be absolute
-  console.log('path', 2, path)
   if (pathIsAbsolute.posix(path) || pathIsAbsolute.win32(path)) {
     throw new HttpBadRequestException('Malicious Path');
   }

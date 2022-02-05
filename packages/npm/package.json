@@ -16,7 +16,9 @@
     "lib": "src"
   },
   "files": [
-    "dist"
+    "dist",
+    "docs",
+    "theme"
   ],
   "scripts": {
     "build": "rm -rf ./dist && tsc"
