@@ -6,6 +6,9 @@
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/npm",
   "license": "MIT",
   "main": "dist/index.js",
+  "bin": {
+    "nppm": "./dist/bin.js"
+  },
   "keywords": [
     "npm"
   ],

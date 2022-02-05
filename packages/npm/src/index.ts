@@ -3,7 +3,7 @@ import { TSchema } from './interface';
 import { createSchemaServer } from './schema';
 import { NPMCore } from '@nppm/core';
 import { createProcess, localhost } from '@typeservice/process';
-import { logger, createHttpServer, container } from '@nppm/utils';
+import { logger, createHttpServer, container, isProduction } from '@nppm/utils';
 import { createDevelopmentMiddleware, createErrorCatchMiddleware, StaticMiddleware } from './middlewares';
 import { ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 
@@ -30,4 +30,8 @@ lifecycle
   .createServer(npmcore.createRedisServer())
   .createServer(npmcore.createApplicationServer());
 
-bootstrap().then(() => logger.info('NPM服务已启动', `http://${localhost}:${schema.port}`));
+export function createServer(callback: (localhost: string, schema: TSchema) => void) {
+  return bootstrap().then(() => callback(localhost, schema));
+}
+
+if (!isProduction) createServer((host, schema) => logger.info('NPM服务已启动', `http://${host}:${schema.port}`));
