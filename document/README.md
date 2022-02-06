@@ -37,5 +37,5 @@ $ pm2 start nppm -- --port=3000 # 启动服务
 ```
 
 ::: slot footer
-MIT Licensed | Copyright © 2018-present [Evio Shen](https://github.com/cevio)
+MIT Licensed | Copyright © 2019-present [Evio Shen](https://github.com/cevio)
 :::
