@@ -1,7 +1,7 @@
 const { resolve } = require('path');
 module.exports = {
   title: 'NPPM',
-  base: '/nppm',
+  base: '/nppm/',
   description: 'Node Private Package Manager',
   dest: resolve(__dirname, '../../docs'),
   evergreen: true,
