@@ -7,6 +7,7 @@ module.exports = {
   evergreen: true,
   themeConfig: {
     lastUpdated: true,
+    smoothScroll: true,
     nextLinks: true,
     prevLinks: true,
     nav: [
