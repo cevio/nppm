@@ -12,7 +12,7 @@ npm-debug.log
 tsconfig.tsbuildinfo
 report.*
 package-lock.json
-dist
+/packages/**/dist
 *.lerna_backup
 test.js
 bak.ts
