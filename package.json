@@ -10,8 +10,8 @@
     "npm": "NODE_ENV=development npm run load npm index.ts -- --port 3000",
     "dingtalk": "npm run load dingtalk",
     "setup": "NODE_ENV=development npm run load setup",
-    "docs:dev": "vuepress dev docs --no-cache",
-    "docs:build": "vuepress build docs"
+    "docs:dev": "vuepress dev document --no-cache",
+    "docs:build": "vuepress build document"
   },
   "devDependencies": {
     "inquirer": "^8.1.0",
