@@ -6,6 +6,7 @@ module.exports = {
   dest: resolve(__dirname, '../../docs'),
   evergreen: true,
   themeConfig: {
+    lastUpdated: true,
     nextLinks: true,
     prevLinks: true,
     nav: [
