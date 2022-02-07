@@ -2,6 +2,8 @@
 
 Node Private Package Manager. Document [here](https://cevio.github.io/nppm/)!
 
+> 请先别使用，因为还在更新中，项目暂完成80%
+
 ## Easy to start
 
 direct start
