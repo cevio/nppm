@@ -15,7 +15,6 @@ module.exports = {
       { text: '指南', link: '/guider' },
       { text: '配置', link: '/setting' },
       { text: '插件', link: '/plugin' },
-      { text: 'Github', link: 'https://github.com/cevio/nppm', target:'_blank', rel:'' }
     ],
     sidebar: [
       '/',
@@ -27,7 +26,7 @@ module.exports = {
     repo: 'cevio/nppm',
     // 自定义仓库链接文字。默认从 `themeConfig.repo` 中自动推断为
     // "GitHub"/"GitLab"/"Bitbucket" 其中之一，或是 "Source"。
-    repoLabel: '查看源码',
+    repoLabel: 'Github',
     // 假如文档不是放在仓库的根目录下：
     docsDir: 'document',
     // 假如文档放在一个特定的分支下：
