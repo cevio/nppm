@@ -2,7 +2,8 @@
 
 Node Private Package Manager. Document [here](https://cevio.github.io/nppm/)!
 
-> 请先别使用，因为还在更新中，项目暂完成80%
+> 请先别使用，因为还在更新中，项目暂完成80%。
+> 预计在`react@18`发布后的几周后发布，原因是打算采用最新react架构作为前端架构（可能会考虑采用`react@18`的SSR渲染）。
 
 ## Easy to start
 
