@@ -3,7 +3,7 @@ import { ConfigCacheAble } from '@nppm/cache';
 import { NPMCore } from '@nppm/core';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestBody } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
-import { ConfigEntity, PackageEntity, UserEntity, VersionEntity } from '@nppm/entity';
+import { ConfigEntity, PackageEntity, UserEntity, VersionEntity, DowloadEntity } from '@nppm/entity';
 import { HttpNotAcceptableException } from '@typeservice/exception';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
@@ -71,15 +71,18 @@ export class HttpConfigsService {
     const User = this.connection.getRepository(UserEntity);
     const Packages = this.connection.getRepository(PackageEntity);
     const Version = this.connection.getRepository(VersionEntity);
-    const [user, pack, version] = await Promise.all([
+    const Download = this.connection.getRepository(DowloadEntity);
+    const [user, pack, version, downloads] = await Promise.all([
       User.count(),
       Packages.count(),
       Version.count(),
+      Download.count(),
     ])
     return {
       userCount: user,
       packageCount: pack,
-      versionCount: version
+      versionCount: version,
+      downloadCount: downloads,
     }
   }
 

@@ -5,11 +5,11 @@ import { NPMCore } from '@nppm/core';
 import { createProcess, localhost } from '@typeservice/process';
 import { logger, createHttpServer, container, isProduction } from '@nppm/utils';
 import { createDevelopmentMiddleware, createErrorCatchMiddleware, StaticMiddleware } from './middlewares';
-import { ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
+import { ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity, DowloadEntity } from '@nppm/entity';
 
 const npmcore = new NPMCore();
 const [bootstrap, lifecycle, schema] = createProcess<TSchema>(e => logger.error(e));
-npmcore.addORMEntities(ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity);
+npmcore.addORMEntities(ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity, DowloadEntity);
 container.bind('npmcore').toConstantValue(npmcore);
 
 lifecycle
