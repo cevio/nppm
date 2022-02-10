@@ -22,3 +22,9 @@ $ npm i -g @nppm/npm pm2 # 安装命令
 $ cd <dictionary> # 需要确定一个目录来存放资源
 $ pm2 start nppm -- --port=3000 # 启动服务
 ```
+
+## Easy to use
+
+```bash
+$ npm <command...> --registry=http://<host>:<port>
+```
