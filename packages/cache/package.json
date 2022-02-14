@@ -1,6 +1,6 @@
 {
   "name": "@nppm/cache",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "node private package manager:cache",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/cache",
@@ -22,7 +22,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@nppm/entity": "^1.0.3",
-    "@nppm/utils": "^1.0.3"
+    "@nppm/entity": "^1.0.4",
+    "@nppm/utils": "^1.0.4"
   }
 }
