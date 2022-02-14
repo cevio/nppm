@@ -7,3 +7,4 @@ export * from './MaintainerEntity';
 export * from './KeywordEntity';
 export * from './DependencyEntity';
 export * from './DownloadEntity';
+export * from './StarEntity';

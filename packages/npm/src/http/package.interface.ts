@@ -23,3 +23,9 @@ export interface TPackageStreamState {
   data: string,
   length: number,
 }
+
+export interface TPackageStarState { 
+  _id: string, 
+  _rev: string, 
+  users: Record<string, true> 
+}

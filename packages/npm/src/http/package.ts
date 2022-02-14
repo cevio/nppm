@@ -4,7 +4,7 @@ import { Like } from 'typeorm'
 import { PackageCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestState, HTTPRequestQuery, HTTPRequestBody, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
-import { MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
+import { MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity, DowloadEntity } from '@nppm/entity';
 import { HttpNotAcceptableException, HttpNotFoundException, HttpForbiddenException } from '@typeservice/exception';
 
 @HTTPController()
@@ -45,17 +45,21 @@ export class HttpPackageService {
       size: number,
       auid: number,
       uid: number,
+      downloads: number,
     }
 
     const Packages = this.connection.getRepository(PackageEntity);
     const Tag = this.connection.getRepository(TagEntity);
     const builder = Packages.createQueryBuilder('pack')
       .leftJoin(VersionEntity, 'version', 'version.pid=pack.id')
+      .leftJoin(DowloadEntity, 'download', 'download.vid=version.id')
       .select('pack.pathname', 'name')
       .addSelect('pack.id', 'id')
       .addSelect('version.description', 'description')
       .addSelect('pack.uid', 'auid')
+      .addSelect('COUNT(download.id)', 'downloads')
       .where('version.uid=:uid', { uid: user.id })
+      .groupBy('1,2,3,4')
       .distinct(true);
     
     if (keyword) builder.andWhere('pack.pathname LIKE :keyword', { keyword: '%' + keyword + '%' });
@@ -90,6 +94,7 @@ export class HttpPackageService {
       pack.version = versions.get(pack.id).code;
       pack.size = versions.get(pack.id).size;
       pack.uid = versions.get(pack.id).uid;
+      pack.downloads = Number(pack.downloads);
       return pack;
     }), count] as const;
   }

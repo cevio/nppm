@@ -3,7 +3,7 @@ import { dirname, resolve } from 'path';
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { ConfigCacheAble } from '@nppm/cache';
-import { DependencyEntity, KeywordEntity, MaintainerEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
+import { DependencyEntity, KeywordEntity, MaintainerEntity, TagEntity, UserEntity, VersionEntity, StarEntity } from '@nppm/entity';
 import { ensureDirSync, writeFileSync, unlinkSync } from 'fs-extra';
 import { Repository } from 'typeorm';
 import { PackageEntity } from '@nppm/entity';
@@ -17,7 +17,7 @@ import { HttpTagService } from './tag';
 import { PackageCacheAble } from '@nppm/cache';
 import { MD5 } from 'crypto-js';
 import { HttpTransactionService } from '../transaction';
-import type { TPackagePublishState } from './package.interface';
+import type { TPackagePublishState, TPackageStarState } from './package.interface';
 import { 
   HTTPController, 
   HTTPRouter, 
@@ -67,19 +67,52 @@ export class HttpPackagePublishService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('publish', 'deprecate'))
+  @HTTPRouterMiddleware(NpmCommanderLimit('publish', 'deprecate', 'star', 'unstar'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public updatePackage(
-    @HTTPRequestBody() body: TPackagePublishState,
+    @HTTPRequestBody() body: TPackagePublishState | TPackageStarState,
     @NPMCommander() commander: string,
     @HTTPRequestState('user') user: UserEntity
   ) {
     switch (commander) {
-      case 'publish': return this.publish(body, user);
-      case 'deprecate': return this.deprecate(body, user);
+      case 'publish': return this.publish(body as TPackagePublishState, user);
+      case 'deprecate': return this.deprecate(body as TPackagePublishState, user);
+      case 'star': return this.star(body as TPackageStarState, user);
+      case 'unstar': return this.unstar(body as TPackageStarState, user);
       default: throw new HttpNotFoundException();
+    }
+  }
+
+  public async star(body: { _id: string }, user: UserEntity) {
+    const Packages = this.connection.getRepository(PackageEntity);
+    let pack = await Packages.findOne({ pathname: body._id });
+    if (!pack) throw new HttpUnprocessableEntityException('can not find package of ' + body._id);
+    const Star = this.connection.getRepository(StarEntity);
+    const num = await Star.count({ uid: user.id, pid: pack.id });
+    if (!num) {
+      await Star.insert({ 
+        uid: user.id, 
+        pid: pack.id, 
+        gmt_create: new Date(), 
+        gmt_modified: new Date() 
+      });
+    }
+    return {
+      ok: true
+    }
+  }
+
+  public async unstar(body: { _id: string }, user: UserEntity) {
+    const Packages = this.connection.getRepository(PackageEntity);
+    let pack = await Packages.findOne({ pathname: body._id });
+    if (!pack) throw new HttpUnprocessableEntityException('can not find package of ' + body._id);
+    const Star = this.connection.getRepository(StarEntity);
+    const star = await Star.findOne({ uid: user.id, pid: pack.id });
+    if (star) await Star.delete(star.id);
+    return {
+      ok: true
     }
   }
 
