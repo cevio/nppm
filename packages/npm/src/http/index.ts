@@ -15,6 +15,7 @@ import { HttpPackagePublishService } from './package.publish';
 import { HttpPackageUnPublishService } from './package.unpublish';
 import { HttpOwnerService } from './owner';
 import { HttpStarService } from './star';
+import { HttpPackageSearchService } from './package.search';
 
 export {
   HttpSetupService,
@@ -32,6 +33,7 @@ export {
   HttpPackageUnPublishService,
   HttpOwnerService,
   HttpStarService,
+  HttpPackageSearchService,
 }
 
 export default [
@@ -51,4 +53,5 @@ export default [
   HttpPackageUnPublishService,
   HttpOwnerService,
   HttpStarService,
+  HttpPackageSearchService,
 ] as interfaces.Newable<any>[];

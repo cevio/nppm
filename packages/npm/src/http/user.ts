@@ -499,4 +499,28 @@ export class HttpUserService {
     });
     return user;
   }
+
+  @HTTPRouter({
+    pathname: '/-/npm/v1/user',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
+  @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
+  @HTTPRouterMiddleware(NpmCommanderLimit('profile'))
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  public profile(@HTTPRequestState('user') user: UserEntity) {
+    return {
+      tfa: false,
+      account: user.account,
+      nickname: user.nickname,
+      name: user.account,
+      email: user.email,
+      login_code: user.login_code,
+      scopes: user.scopes,
+      created: user.gmt_create,
+      updated: user.gmt_modified
+    }
+  }
 }

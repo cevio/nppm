@@ -8,6 +8,7 @@ import { HttpNotAcceptableException } from '@typeservice/exception';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
 import { HttpOKException } from '@typeservice/exception';
+import { performance } from 'perf_hooks';
 
 export interface TConfigs {
   domain: string,
@@ -24,6 +25,14 @@ export class HttpConfigsService {
 
   get connection() {
     return this.npmcore.orm.value;
+  }
+
+  @HTTPRouter({
+    pathname: '/-/ping',
+    methods: 'GET'
+  })
+  public ping() {
+    return performance.now();
   }
 
   @HTTPRouter({
