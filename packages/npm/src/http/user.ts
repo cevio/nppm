@@ -387,6 +387,22 @@ export class HttpUserService {
   }
 
   @HTTPRouter({
+    pathname: '/~/user/:id(\\d+)',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  public async getUserById(@HTTPRequestParam('id') uid: string) {
+    const User = this.connection.getRepository(UserEntity);
+    const user = await User.findOne(Number(uid));
+    if (!user) throw new HttpNotFoundException('找不到用户');
+    delete user.password;
+    delete user.login_forbiden;
+    return user;
+  }
+
+  @HTTPRouter({
     pathname: '/~/users',
     methods: 'GET'
   })
@@ -521,6 +537,31 @@ export class HttpUserService {
       scopes: user.scopes,
       created: user.gmt_create,
       updated: user.gmt_modified
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/user/:id(\\d+)/scopes',
+    methods: 'PUT'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async setUserScopes(
+    @HTTPRequestParam('id') id: string,
+    @HTTPRequestBody() body: string[]
+  ) {
+    if (!Array.isArray(body)) throw new HttpNotAcceptableException('scopes必须为数组');
+    const uid = Number(id);
+    const User = this.connection.getRepository(UserEntity);
+    const user = await User.findOne({ id: uid });
+    if (!user) throw new HttpNotFoundException('找不到用户');
+    user.scopes = body;
+    await User.save(user);
+    await UserCacheAble.build({ id: uid }, this.connection);
+    return {
+      ok: true,
     }
   }
 }

@@ -4,7 +4,7 @@ import { ConfigEntity, UserEntity } from '@nppm/entity';
 import { NPMCore } from '@nppm/core';
 import { HttpNotAcceptableException, HttpNotFoundException } from '@typeservice/exception';
 import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestState } from '@typeservice/http';
-import { ORM_CONNECTION_CONTEXT, REDIS_CONNECTION_CONTEXT, TORMConfigs, TCreateRedisServerProps, UserInfoMiddleware } from '@nppm/utils';
+import { ORM_CONNECTION_CONTEXT, REDIS_CONNECTION_CONTEXT, TORMConfigs, TCreateRedisServerProps, UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware, UserMustBeAdminMiddleware } from '@nppm/utils';
 
 @HTTPController()
 export class HttpSetupService {
@@ -48,6 +48,7 @@ export class HttpSetupService {
 
   /**
    * 设置ORM存储数据
+   * 安装模式
    * @param body 
    * @param user 
    * @returns 
@@ -56,12 +57,31 @@ export class HttpSetupService {
     pathname: '/~/setup/orm',
     methods: 'POST'
   })
-  public async setORMState(
-    @HTTPRequestBody() body: TORMConfigs,
-    @HTTPRequestState('user') user: UserEntity
-  ) {
+  public async setORMState(@HTTPRequestBody() body: TORMConfigs) {
     const mode = await this.getWebsiteMode();
-    if (mode !== 1 && !user.admin) throw new HttpNotFoundException();
+    if (mode !== 1) throw new HttpNotFoundException();
+    return await this.setORMStateWithAdmin(body);
+  }
+
+  /**
+   * 设置ORM存储数据
+   * 管理员模式
+   * @param body 
+   * @param user 
+   * @returns 
+   */
+   @HTTPRouter({
+    pathname: '/~/setup/orm',
+    methods: 'PUT'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async setORMStateWithAdmin(
+    @HTTPRequestBody() body: TORMConfigs, 
+    @HTTPRequestState('user') user?: UserEntity
+  ) {
     const rollback = this.npmcore.configs.updateORMState(body);
     const status = await this.checkStatus(() => !!ORM_CONNECTION_CONTEXT.value, 1000, 30 * 1000);
     if (status) {
@@ -75,7 +95,10 @@ export class HttpSetupService {
         _configs.scopes = [];
         _configs.dictionary = 'node_packages';
         _configs.registerable = true;
-        configs = await ConfigRepository.save(_configs);
+        await ConfigRepository.save(_configs);
+        if (user && user.admin) {
+          await ConfigCacheAble.build(null, this.connection);
+        }
       }
     } else {
       rollback();
@@ -85,6 +108,7 @@ export class HttpSetupService {
 
   /**
    * 设置REDIS存储数据
+   * 安装模式
    * @param body 
    * @returns 
    */
@@ -92,9 +116,28 @@ export class HttpSetupService {
     pathname: '/~/setup/redis',
     methods: 'POST'
   })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
   public async setRedisState(@HTTPRequestBody() body: TCreateRedisServerProps) {
     const mode = await this.getWebsiteMode();
     if (mode !== 2) throw new HttpNotFoundException();
+    return await this.setRedisStateWithAdmin(body);
+  }
+
+  /**
+   * 设置REDIS存储数据
+   * 管理员模式
+   * @param body 
+   * @returns 
+   */
+   @HTTPRouter({
+    pathname: '/~/setup/redis',
+    methods: 'PUT'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public async setRedisStateWithAdmin(@HTTPRequestBody() body: TCreateRedisServerProps) {
     if (!body.host || !body.port) throw new HttpNotAcceptableException('redis地址和redis端口必填');
     const rollback = this.npmcore.configs.updateRedisState(body);
     const status = await this.checkStatus(() => !!REDIS_CONNECTION_CONTEXT.value, 1000, 30 * 1000);

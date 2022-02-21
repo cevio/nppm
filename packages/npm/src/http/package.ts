@@ -155,7 +155,7 @@ export class HttpPackageService {
     pathname: '/~/package/update/recently',
     methods: 'GET'
   })
-  public updateRecently() {
+  public updateRecently(@HTTPRequestQuery('top') top: string) {
     const Packages = this.connection.getRepository(PackageEntity);
     return Packages.createQueryBuilder('p')
       .leftJoin(UserEntity, 'u', 'u.id=p.uid')
@@ -170,7 +170,7 @@ export class HttpPackageService {
         'p.gmt_modified': 'DESC',
         'p.gmt_create': 'DESC',
       })
-      .limit(10)
+      .limit(Number(top || '10'))
       .getRawMany();
   }
 }
