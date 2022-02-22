@@ -2,6 +2,7 @@ import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { HttpPackagePublishService } from './package.publish';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestState, HTTPRequestParam, HTTPRequestBody } from '@typeservice/http';
+import { HttpNotFoundException } from '@typeservice/exception';
 import { PackageEntity, StarEntity, UserEntity } from '@nppm/entity';
 import { 
   createNPMErrorCatchMiddleware, 
@@ -57,5 +58,26 @@ export class HttpStarService {
     return body.status 
       ? this.HttpPackagePublishService.star({ _id: pkg }, user)
       : this.HttpPackagePublishService.unstar({ _id: pkg }, user);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/star/:pkg',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  public async getStarStatusByPackage(
+    @HTTPRequestParam('pkg') pkg: string,
+    @HTTPRequestState('user') user: UserEntity,
+  ) {
+    const Packages = this.connection.getRepository(PackageEntity);
+    const pack = await Packages.findOne({ pathname: pkg });
+    if (!pack) throw new HttpNotFoundException('找不到模块');
+    const Star = this.connection.getRepository(StarEntity);
+    const count = await Star.count({ pid: pack.id, uid: user.id });
+    return {
+      status: !!count,
+    }
   }
 }
