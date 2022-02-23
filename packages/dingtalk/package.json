@@ -1,6 +1,6 @@
 {
   "name": "@nppm/dingtalk",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "钉钉，阿里巴巴出品，专为全球企业组织打造的智能移动办公平台，含PC版，IPad和手机版。远程视频会议，消息已读未读，DING消息任务管理，让沟通更高效；移动办公考勤，签到，审批，钉闪会，钉钉文档，钉钉教育解决方案，让工作学习更简单！",
   "plugin_name": "钉钉登录",
   "plugin_icon": "http://soft.uesou.cn/uploadfile/2021/0318/20210318112115859.png",
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@nppm/cache": "^1.0.5",
-    "@nppm/core": "^1.0.5",
+    "@nppm/core": "^1.0.6",
     "@nppm/utils": "^1.0.5",
     "axios": "^0.25.0"
   },

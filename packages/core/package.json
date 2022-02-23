@@ -1,6 +1,6 @@
 {
   "name": "@nppm/core",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "node private package manager:core",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/core",
