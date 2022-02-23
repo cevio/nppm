@@ -35,8 +35,9 @@ export * from './login';
 
 let id = 1;
 
-interface TPluginInstallInfomation {
+export interface TPluginInstallInfomation {
   id: number,
+  name: string,
   status: -2 | -1 | 0 | 1 | 2,
   startTimeStamp: number,
   endTimeStamp: number,
@@ -52,7 +53,7 @@ export class NPMCore {
   public readonly http = HTTP_APPLICATION_CONTEXT;
   public readonly server = HTTP_SERVER_CONTEXT;
   public readonly HOME = isProduction ? process.cwd() : process.env.HOME;
-  public readonly installers = new Map<string, TPluginInstallInfomation>();
+  public readonly installers = new Set<TPluginInstallInfomation>();
   public readonly configs = new Configs(this.HOME);
   private readonly entities = new Set<interfaces.Newable<any>>();
   private readonly applications = new Map<string, TApplicationPackageJSONState>();
@@ -106,11 +107,14 @@ export class NPMCore {
     if (!pkg.nppm) return false;
     const application = require(!isProduction ? resolve(dictionary, dev ? pkg.devmain : pkg.main) : dictionary);
     const installer = (application.default || application) as TApplication;
-    console.log('setup', 1, installer, typeof installer ==='function' ? installer.toString() : null);
-    pkg._uninstall = await Promise.resolve(installer(this));
-    console.log('setup', 2, pkg._uninstall, typeof pkg._uninstall === 'function' ? pkg._uninstall.toString() : null)
-    this.applications.set(key, pkg);
-    return true;
+    try {
+      pkg._uninstall = await Promise.resolve(installer(this));
+      this.applications.set(key, pkg);
+      return true;
+    } catch (e) {
+      await this.uninstall(key);
+      return false;
+    }
   }
 
   public async install(app: string, dev?: boolean, registry?: string) {
@@ -129,7 +133,7 @@ export class NPMCore {
       this.configs.saveFile();
       return await this.installApplication(pkg.name, true);
     }
-    this.installers.set(app, this.createInstallPluginTask(app, registry));
+    this.installers.add(this.createInstallPluginTask(app, registry));
     return true;
   }
 
@@ -147,6 +151,7 @@ export class NPMCore {
     if (!name) throw new HttpNotAcceptableException('错误的插件名称');
     const state: TPluginInstallInfomation = {
       id: id++,
+      name,
       status: 0,
       startTimeStamp: Date.now(),
       endTimeStamp: null,
@@ -185,7 +190,7 @@ export class NPMCore {
 
   public createInstallHistoryDestroyServer() {
     return () => {
-      for (const [, value] of this.installers) {
+      for (const value of this.installers) {
         const _process = value.process;
         if (_process) {
           _process.kill('SIGTERM');

@@ -1,6 +1,5 @@
 import { inject } from 'inversify';
-import { NPMCore } from '@nppm/core';
-import { MapToJSON } from '../map-to-json';
+import { NPMCore, TPluginInstallInfomation } from '@nppm/core';
 import { HttpServiceUnavailableException, HttpNotFoundException } from '@typeservice/exception';
 import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
@@ -40,28 +39,10 @@ export class HttpPluginService {
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
-  public getPluginHistory(): any {
-    return MapToJSON(this.npmcore.installers, value => {
-      return Object.assign({}, value, {
-        process: undefined,
-      })
-    });
-  }
-
-  @HTTPRouter({
-    pathname: '/~/plugin/history/:pkg',
-    methods: 'GET'
-  })
-  @HTTPRouterMiddleware(UserInfoMiddleware)
-  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
-  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
-  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
-  public getPluginHistoryItem(@HTTPRequestParam('pkg') pkg: string): any {
-    if (!this.npmcore.installers.has(pkg)) throw new HttpNotFoundException('找不到插件安装历史记录');
-    const chunk = this.npmcore.installers.get(pkg);
-    return Object.assign({}, chunk, {
-      process: undefined,
-    })
+  public getPluginHistory() {
+    return Array.from(this.npmcore.installers.values())
+      .map(installer => Object.assign({}, installer, { process: undefined }))
+      .sort((a, b) => b.startTimeStamp - a.startTimeStamp);
   }
 
   @HTTPRouter({
