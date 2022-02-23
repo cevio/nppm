@@ -12,20 +12,22 @@ const [bootstrap, lifecycle, schema] = createProcess<TSchema>(e => logger.error(
 npmcore.addORMEntities(ConfigEntity, DependencyEntity, KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity, DowloadEntity, StarEntity);
 container.bind('npmcore').toConstantValue(npmcore);
 
+const HttpServerMiddleware = createHttpServer({
+  port: Number(schema.port),
+  middlewares: [StaticMiddleware, createErrorCatchMiddleware, createDevelopmentMiddleware, require('koa-etag')()],
+  services: HttpServices,
+  keys: ['nppm'],
+  bodyParser: {
+    enableTypes: ['json', 'text'],
+    jsonLimit: '500mb',
+    strict: false,
+  }
+})
+
 lifecycle
   .createServer(createSchemaServer)
   .createServer(npmcore.configs.createConfigServer())
-  .createServer(createHttpServer({
-    port: Number(schema.port),
-    middlewares: [StaticMiddleware, createErrorCatchMiddleware, createDevelopmentMiddleware, require('koa-etag')()],
-    services: HttpServices,
-    keys: ['nppm'],
-    bodyParser: {
-      enableTypes: ['json', 'text'],
-      jsonLimit: '500mb',
-      strict: false,
-    }
-  }))
+  .createServer(HttpServerMiddleware)
   .createServer(npmcore.createInstallHistoryDestroyServer.bind(npmcore))
   .createServer(npmcore.createORMServer())
   .createServer(npmcore.createRedisServer())

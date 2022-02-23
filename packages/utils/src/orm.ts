@@ -27,7 +27,7 @@ export function createORMServer(props: TCreateORMServerProps) {
   return async () => {
     const configs = Object.assign(props.configs, {
       synchronize: !!props.synchronize,
-      logging: !isProduction,
+      logging: false,
       entities: props.entities,
     }) as ConnectionOptions;
     const connection = await createConnection(configs);
