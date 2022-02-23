@@ -112,6 +112,7 @@ export class NPMCore {
       this.applications.set(key, pkg);
       return true;
     } catch (e) {
+      logger.error('[core.installApplication]', e);
       await this.uninstall(key);
       return false;
     }
@@ -201,7 +202,7 @@ export class NPMCore {
   }
 
   public async uninstall(app: string) {
-    if (!this.applications.has(app)) throw new HttpNotFoundException('找不到卸载的应用');
+    if (!this.applications.has(app)) throw new HttpNotFoundException('找不到卸载的应用:' + app);
     const state = this.applications.get(app);
     if (state._uninstall) await Promise.resolve(state._uninstall());
     this.applications.delete(app);
