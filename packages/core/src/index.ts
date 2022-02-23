@@ -32,7 +32,10 @@ export * from './configs';
 export * from './interface';
 export * from './login';
 
+let id = 1;
+
 interface TPluginInstallInfomation {
+  id: number,
   status: -2 | -1 | 0 | 1 | 2,
   startTimeStamp: number,
   endTimeStamp: number,
@@ -123,6 +126,7 @@ export class NPMCore {
 
   private createInstallPluginTask(app: string, registry?: string): TPluginInstallInfomation {
     const state: TPluginInstallInfomation = {
+      id: id++,
       status: 0,
       startTimeStamp: Date.now(),
       endTimeStamp: null,
