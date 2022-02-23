@@ -26,6 +26,7 @@ import {
   HttpMovedPermanentlyException, 
   HttpOKException, 
   HttpNotFoundException,
+  HttpNotAcceptableException,
 } from '@typeservice/exception';
 
 export * from './configs';
@@ -132,7 +133,18 @@ export class NPMCore {
     return true;
   }
 
+  private formatApplicationInstallNamespace(name: string) {
+    if (name.startsWith('@')) {
+      const a = /^@([^@]+)(@([^\/]+))?$/.exec(name);
+      if (a) return '@' + a[1];
+    } else {
+      return name.split('@')[0];
+    }
+  }
+
   private createInstallPluginTask(app: string, registry?: string): TPluginInstallInfomation {
+    const name = this.formatApplicationInstallNamespace(app);
+    if (!name) throw new HttpNotAcceptableException('错误的插件名称');
     const state: TPluginInstallInfomation = {
       id: id++,
       status: 0,
@@ -157,7 +169,7 @@ export class NPMCore {
         state.status = -1;
       } else {
         state.status = 1;
-        this.installApplication(app).then(() => {
+        this.installApplication(name).then(() => {
           state.status = 2;
         }).catch(e => {
           state.status = -2;
