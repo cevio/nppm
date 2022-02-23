@@ -3,7 +3,7 @@ import { existsSync, symlinkSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { interfaces } from 'inversify';
 import { Configs } from './configs';
-import { spawn } from 'child_process';
+import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { Login } from './login';
 import { effect } from '@vue/reactivity';
 import { ConfigCacheAble } from '@nppm/cache';
@@ -32,17 +32,28 @@ export * from './configs';
 export * from './interface';
 export * from './login';
 
+interface TPluginInstallInfomation {
+  status: -2 | -1 | 0 | 1 | 2,
+  startTimeStamp: number,
+  endTimeStamp: number,
+  installedTimeStamp: number,
+  msg?: string[],
+  error?: string,
+  process: ChildProcessWithoutNullStreams
+}
+
 export class NPMCore {
   public readonly orm = ORM_CONNECTION_CONTEXT;
   public readonly redis = REDIS_CONNECTION_CONTEXT;
   public readonly http = HTTP_APPLICATION_CONTEXT;
   public readonly server = HTTP_SERVER_CONTEXT;
   public readonly HOME = isProduction ? process.cwd() : process.env.HOME;
+  public readonly installers = new Map<string, TPluginInstallInfomation>();
   public readonly configs = new Configs(this.HOME);
   private readonly entities = new Set<interfaces.Newable<any>>();
   private readonly applications = new Map<string, TApplicationPackageJSONState>();
   private readonly logins = new Map<string, Login>();
-
+  
   public addORMEntities(...enitities: interfaces.Newable<any>[]) {
     const i = this.entities.size;
     enitities.forEach(entity => this.entities.add(entity));
@@ -76,14 +87,14 @@ export class NPMCore {
     }
   }
 
-  private async installApplication(key: string) {
+  private async installApplication(key: string, dev?: boolean) {
     if (this.applications.has(key)) return false;
     const dictionary = resolve(this.HOME, 'node_modules', key);
     const pkgfilename = resolve(dictionary, 'package.json');
     if (!existsSync(pkgfilename)) return;
     const pkg = require(pkgfilename) as TApplicationPackageJSONState;
     if (!pkg.nppm) return false;
-    const application = require(!isProduction ? resolve(dictionary, pkg.devmain) : dictionary);
+    const application = require(!isProduction ? resolve(dictionary, dev ? pkg.devmain : pkg.main) : dictionary);
     const installer = (application.default || application) as TApplication;
     pkg._uninstall = await Promise.resolve(installer(this, key));
     this.applications.set(key, pkg);
@@ -104,21 +115,60 @@ export class NPMCore {
       if (!this.configs.value.dependencies) this.configs.value.dependencies = {};
       this.configs.value.dependencies[pkg.name] = 'file:' + app;
       this.configs.saveFile();
-      return await this.installApplication(pkg.name);
+      return await this.installApplication(pkg.name, true);
     }
-    const key = await new Promise<string>((resolved, reject) => {
-      const args: string[] = ['install', app];
-      if (registry) args.push('--registry=' + registry);
-      const ls = spawn('npm', args, { cwd: this.HOME });
-      ls.on('error', e => logger.error(e));
-      ls.stdout.on('data', m => logger.info(m.toString()));
-      ls.stderr.on('data', m => logger.error(m.toString()));
-      ls.on('exit', code => {
-        if (code !== 0) return reject(new Error('application ' + app + ' install failed.'));
-        resolved(app);
-      })
+    this.installers.set(app, this.createInstallPluginTask(app, registry));
+    return true;
+  }
+
+  private createInstallPluginTask(app: string, registry?: string): TPluginInstallInfomation {
+    const state: TPluginInstallInfomation = {
+      status: 0,
+      startTimeStamp: Date.now(),
+      endTimeStamp: null,
+      installedTimeStamp: null,
+      msg: [],
+      error: null,
+      process: null
+    }
+    const args: string[] = ['install', app];
+    if (registry) args.push('--registry=' + registry);
+    args.push('--no-package-lock');
+    const ls = spawn('npm', args, { cwd: this.HOME });
+    ls.on('error', e => state.error = e.message);
+    ls.stdout.on('data', m => state.msg.push(m.toString()));
+    ls.stderr.on('data', m => state.msg.push(m.toString()));
+    ls.on('exit', code => {
+      state.endTimeStamp = Date.now();
+      state.process = null;
+      if (code !== 0) {
+        state.status = -1;
+      } else {
+        state.status = 1;
+        this.installApplication(app).then(() => {
+          state.status = 2;
+        }).catch(e => {
+          state.status = -2;
+          state.error = e.message;
+        }).finally(() => {
+          state.installedTimeStamp = Date.now();
+        });
+      }
     })
-    return await this.installApplication(key);
+    state.process = ls;
+    return state;
+  }
+
+  public createInstallHistoryDestroyServer() {
+    return () => {
+      for (const [, value] of this.installers) {
+        const _process = value.process;
+        if (_process) {
+          _process.kill('SIGTERM');
+          value.process = null;
+        }
+      }
+    }
   }
 
   public async uninstall(app: string) {

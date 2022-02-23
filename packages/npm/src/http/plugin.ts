@@ -1,6 +1,7 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
-import { HttpServiceUnavailableException } from '@typeservice/exception';
+import { MapToJSON } from '../map-to-json';
+import { HttpServiceUnavailableException, HttpNotFoundException } from '@typeservice/exception';
 import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 
@@ -28,6 +29,39 @@ export class HttpPluginService {
   public async installPlugin(@HTTPRequestBody() body: { name: string, registry?: string, dev?: boolean }) {
     const suceess = await this.npmcore.install(body.name, body.dev, body.registry);
     if (!suceess) throw new HttpServiceUnavailableException('安装插件失败');
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugin/history',
+    methods: 'GET'
+  })
+  // /Users/evioshen/code/github/nppm/packages/dingtalk
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public getPluginHistory(): any {
+    return MapToJSON(this.npmcore.installers, value => {
+      return Object.assign({}, value, {
+        process: undefined,
+      })
+    });
+  }
+
+  @HTTPRouter({
+    pathname: '/~/plugin/history/:pkg',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public getPluginHistoryItem(@HTTPRequestParam('pkg') pkg: string): any {
+    if (!this.npmcore.installers.has(pkg)) throw new HttpNotFoundException('找不到插件安装历史记录');
+    const chunk = this.npmcore.installers.get(pkg);
+    return Object.assign({}, chunk, {
+      process: undefined,
+    })
   }
 
   @HTTPRouter({

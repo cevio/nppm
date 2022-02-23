@@ -26,6 +26,7 @@ lifecycle
       strict: false,
     }
   }))
+  .createServer(npmcore.createInstallHistoryDestroyServer.bind(npmcore))
   .createServer(npmcore.createORMServer())
   .createServer(npmcore.createRedisServer())
   .createServer(npmcore.createApplicationServer());
