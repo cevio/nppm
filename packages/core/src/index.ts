@@ -56,6 +56,10 @@ export class NPMCore {
   private readonly entities = new Set<interfaces.Newable<any>>();
   private readonly applications = new Map<string, TApplicationPackageJSONState>();
   private readonly logins = new Map<string, Login>();
+
+  get logger() {
+    return logger;
+  }
   
   public addORMEntities(...enitities: interfaces.Newable<any>[]) {
     const i = this.entities.size;
@@ -83,7 +87,9 @@ export class NPMCore {
         if (ORM_INSTALLED.value && REDIS_INSTALLED.value) {
           const dependencies = this.configs.value.dependencies;
           for (const key in dependencies) {
-            this.installApplication(key).catch(e => logger.error(e));
+            this.installApplication(key)
+              .then(() => logger.info('已安装插件', key))
+              .catch(e => logger.error(e));
           }
         }
       })
@@ -99,7 +105,9 @@ export class NPMCore {
     if (!pkg.nppm) return false;
     const application = require(!isProduction ? resolve(dictionary, dev ? pkg.devmain : pkg.main) : dictionary);
     const installer = (application.default || application) as TApplication;
-    pkg._uninstall = await Promise.resolve(installer(this, key));
+    console.log('setup', 1, installer, typeof installer ==='function' ? installer.toString() : null);
+    pkg._uninstall = await Promise.resolve(installer(this));
+    console.log('setup', 2, pkg._uninstall, typeof pkg._uninstall === 'function' ? pkg._uninstall.toString() : null)
     this.applications.set(key, pkg);
     return true;
   }
@@ -176,19 +184,17 @@ export class NPMCore {
   }
 
   public async uninstall(app: string) {
-    if (!this.applications.has(app)) return;
-    const state = await new Promise<TApplicationPackageJSONState>((resolved, reject) => {
+    if (!this.applications.has(app)) throw new HttpNotFoundException('找不到卸载的应用');
+    const state = this.applications.get(app);
+    if (state._uninstall) await Promise.resolve(state._uninstall());
+    this.applications.delete(app);
+    await new Promise<void>((resolved, reject) => {
       const ls = spawn('npm', ['uninstall', app], { cwd: this.HOME })
       ls.on('exit', code => {
-        if (code !== 0) return reject(new Error('application ' + app + ' uninstall failed.'));
-        const state = this.applications.get(app);
-        this.applications.delete(app);
-        resolved(state);
+        if (code !== 0) return reject(new HttpServiceUnavailableException('application ' + app + ' uninstall failed.'));
+        resolved();
       })
     })
-    if (state._uninstall) {
-      await Promise.resolve(state._uninstall());
-    }
   }
 
   public createLoginModule(name: string) {

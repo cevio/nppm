@@ -5,7 +5,7 @@ export interface TConfigs {
   redis: TCreateRedisServerProps,
 }
 
-export type TApplication = (core: NPMCore, name: string) => void | TApplicationRollback | Promise<void> | Promise<TApplicationRollback>;
+export type TApplication = (core: NPMCore) => void | TApplicationRollback | Promise<void> | Promise<TApplicationRollback>;
 export type TApplicationRollback = void | (() => any | Promise<any>);
 
 

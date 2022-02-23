@@ -5,7 +5,9 @@ import { HttpAcceptedException, HttpServiceUnavailableException } from '@typeser
 import { stacks, appid } from './state';
 import { Service } from './service';
 
-export default async function DingTalkApplication(npmcore: NPMCore, namespace: string) {
+const namespace: string = require('../package.json').name;
+
+export default async function DingTalkApplication(npmcore: NPMCore) {
   ConfigCacheAble.redis = npmcore.redis.value;
   const configs = await ConfigCacheAble.get(null, npmcore.orm.value);
   const tryAgain = new HttpAcceptedException();

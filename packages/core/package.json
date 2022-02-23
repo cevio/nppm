@@ -26,9 +26,7 @@
     "@nppm/utils": "^1.0.5",
     "@types/fs-extra": "^9.0.13",
     "@types/minimist": "^1.2.2",
-    "@types/npm": "^7.19.0",
     "fs-extra": "^10.0.0",
-    "minimist": "^1.2.5",
-    "npm": "^8.5.1"
+    "minimist": "^1.2.5"
   }
 }
