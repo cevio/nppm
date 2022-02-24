@@ -202,14 +202,23 @@ export class NPMCore {
   }
 
   public async uninstall(app: string) {
-    if (!this.applications.has(app)) throw new HttpNotFoundException('找不到卸载的应用:' + app);
-    const state = this.applications.get(app);
-    if (state._uninstall) await Promise.resolve(state._uninstall());
-    this.applications.delete(app);
+    const pkgDictionary = resolve(this.HOME, 'node_modules', app);
+    if (!existsSync(pkgDictionary)) throw new HttpNotFoundException('找不到卸载的应用:' + app);
+    if (this.applications.has(app)) {
+      const state = this.applications.get(app);
+      if (state._uninstall) await Promise.resolve(state._uninstall());
+      this.applications.delete(app);
+    }
     await new Promise<void>((resolved, reject) => {
       const ls = spawn('npm', ['uninstall', app], { cwd: this.HOME })
       ls.on('exit', code => {
         if (code !== 0) return reject(new HttpServiceUnavailableException('application ' + app + ' uninstall failed.'));
+        // 清理require缓存
+        for (const key in require.cache) {
+          if (key.startsWith(pkgDictionary)) {
+            delete require.cache[key];
+          }
+        }
         resolved();
       })
     })
