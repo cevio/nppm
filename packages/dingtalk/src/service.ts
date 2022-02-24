@@ -14,11 +14,6 @@ const pkgname = require('../package.json').name;
 @HTTPController()
 export class Service {
   @inject('npmcore') private readonly npmcore: NPMCore;
-  
-  constructor() {
-    AccessTokenCacheAble.redis = this.redis;
-  }
-
 
   get connection() {
     return this.npmcore.orm.value;

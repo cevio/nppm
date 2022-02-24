@@ -4,11 +4,13 @@ import { ConfigCacheAble } from '@nppm/cache';
 import { HttpAcceptedException, HttpServiceUnavailableException } from '@typeservice/exception';
 import { stacks } from './state';
 import { Service } from './service';
+import { AccessTokenCacheAble } from './cache';
 
 const namespace: string = require('../package.json').name;
 
 export default function WechatWorkApplication(npmcore: NPMCore) {
   ConfigCacheAble.redis = npmcore.redis.value;
+  AccessTokenCacheAble.redis = npmcore.redis.value;
 
   const removeService = npmcore.http.value.createService(Service);
   const loginModule = npmcore.createLoginModule(namespace);
