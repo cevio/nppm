@@ -2,11 +2,12 @@ import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { createHmac } from 'crypto';
 import { stacks } from './state';
-import { TAccessToken, TOpenID, TUserID, TUserInfo } from './interface';
+import { TOpenID, TUserID, TUserInfo } from './interface';
 import axios, { AxiosResponse } from 'axios';
 import { HTTPController, HTTPRouter, HTTPRequestQuery } from '@typeservice/http';
 import { HttpServiceUnavailableException } from '@typeservice/exception';
 import { MD5 } from 'crypto-js';
+import { AccessTokenCacheAble } from './cache';
 
 const pkgname = require('../package.json').name;
 
@@ -32,7 +33,7 @@ export class Service {
   ) {
     const { appid, appkey, appsecret, appidsecret } = this.npmcore.loadPluginState(pkgname);
     const result = stacks.get(state);
-    const access_token = await this.getAccessToken(appkey, appsecret);
+    const access_token = await AccessTokenCacheAble.get({ appKey: appkey, appSecret: appsecret });
     result.status = 1;
     const { unionid, openid } = await this.getOpenID(code, appid, appidsecret);
     result.status = 2;
@@ -42,13 +43,6 @@ export class Service {
     result.data = Object.assign(user, { token: MD5('dingtalk_' + openid).toString() });
     result.status = 4;
     throw await this.npmcore.setLoginAuthorize(state);
-  }
-
-  private async getAccessToken(appkey: string, appsecret: string) {
-    const res = await axios.get<any, AxiosResponse<TAccessToken>>(`https://oapi.dingtalk.com/gettoken?appkey=${appkey}&appsecret=${appsecret}`);
-    const data = res.data;
-    if (data.errcode > 0) throw new HttpServiceUnavailableException(data.errmsg);
-    return data.access_token;
   }
 
   private async getOpenID(code: string, appid: string, appidsecret: string) {

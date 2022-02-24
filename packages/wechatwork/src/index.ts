@@ -30,7 +30,7 @@ function createLoginURL(npmcore: NPMCore) {
     const redirect_url = encodeURIComponent(resolve(configs.domain, '/~/v1/login/wechat/work/authorize'));
     const timer = setTimeout(() => {
       if (stacks.has(session)) stacks.delete(session);
-    }, expire * 60 * 1000);
+    }, Number(expire) * 60 * 1000);
     stacks.set(session, { status: 0, data: null, msg: null, timer });
     return `https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=${appid}&agentid=${agentid}&redirect_uri=${redirect_url}&state=${session}`;
   }
