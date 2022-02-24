@@ -6,6 +6,7 @@ import { TAccessToken, TOpenID, TUserID, TUserInfo } from './interface';
 import axios, { AxiosResponse } from 'axios';
 import { HTTPController, HTTPRouter, HTTPRequestQuery } from '@typeservice/http';
 import { HttpServiceUnavailableException } from '@typeservice/exception';
+import { MD5 } from 'crypto-js';
 
 const pkgname = require('../package.json').name;
 
@@ -38,7 +39,7 @@ export class Service {
     const userid = await this.getUserId(access_token, unionid);
     result.status = 3;
     const user = await this.getUserInfo(access_token, userid);
-    result.data = Object.assign(user, { token: openid });
+    result.data = Object.assign(user, { token: MD5('dingtalk_' + openid).toString() });
     result.status = 4;
     throw await this.npmcore.setLoginAuthorize(state);
   }

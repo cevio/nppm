@@ -25,3 +25,4 @@ lerna-debug.log
 node_packages
 *.log
 *.zip
+.local.bak

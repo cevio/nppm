@@ -2,7 +2,7 @@ export interface TAccessToken {
   "errcode": number,
   "errmsg": string,
   "access_token": string,
-  "expires_in": 7200
+  "expires_in": 7200,
 }
 
 export interface TOpenID {

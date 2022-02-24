@@ -29,13 +29,15 @@
     "@nppm/cache": "^1.0.7",
     "@nppm/core": "^1.0.12",
     "@nppm/utils": "^1.0.7",
-    "axios": "^0.25.0"
+    "@types/crypto-js": "^4.1.1",
+    "axios": "^0.25.0",
+    "crypto-js": "^4.1.1"
   },
   "plugin_configs": [
     {
       "type": "input",
       "key": "appid",
-      "value": "dingoauqykufg1t7afqmtp",
+      "value": null,
       "placeholder": "请输入钉钉开放平台获取到的APPID",
       "title": "App ID",
       "width": "100%"
@@ -43,7 +45,7 @@
     {
       "type": "input",
       "key": "appkey",
-      "value": "dingr6eh1fizaidjmhpk",
+      "value": null,
       "placeholder": "应用凭证 - APPKEY",
       "title": "AppKey",
       "width": "100%",
@@ -52,7 +54,7 @@
     {
       "type": "input",
       "key": "appsecret",
-      "value": "v1BQiOoONRDWP4xlN27BJQajXCU46sjfjgf6RaKnTBpDXrzKfIvLKkXQTxYUFUj8",
+      "value": null,
       "placeholder": "应用凭证 - AppSecret",
       "title": "AppSecret",
       "width": "100%",
@@ -61,10 +63,30 @@
     {
       "type": "input",
       "key": "appidsecret",
-      "value": "Kkqsdt8mHALUkPmTMH6go2XB_OxGN6Yoa2ktxNuRgVe1wp7c988Plx6j-KecyChO",
+      "value": null,
       "placeholder": "请输入钉钉开放平台获取到的APPKIDSECRET",
       "title": "App ID Secret",
       "width": "100%"
+    },
+    {
+      "type": "input",
+      "mode": "number",
+      "key": "expire",
+      "value": 5,
+      "default": 5,
+      "placeholder": "登录有效时间（分钟）",
+      "title": "Login Expire Time",
+      "description": "每次登录自动失效时间，以分钟为单位计。如果用户长时间未登录且超过这个时间，系统自动判断为这次登录失效。"
+    },
+    {
+      "type": "input",
+      "mode": "number",
+      "key": "retryAfter",
+      "value": 3,
+      "default": 3,
+      "placeholder": "心跳间隔（秒）",
+      "title": "NPM Login Checker By Heartbeat",
+      "description": "NPM第三方登录机制，具备一个心跳检测机制，通过一定的时间间隔来判断用户的登录状态。这里以秒计，表示N秒后进行下一次心跳检测。"
     }
   ]
 }

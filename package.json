@@ -3,7 +3,8 @@
   "description": "Node private package manager",
   "private": true,
   "scripts": {
-    "push": "npm run docs:build && lerna run build && git add . && git commit -am 'update' && git push && lerna publish",
+    "reset": "node scripts/reset.js",
+    "push": "npm run reset && npm run docs:build && lerna run build && git add . && git commit -am 'update' && git push && lerna publish",
     "create": "node scripts/create.js",
     "build": "lerna run build",
     "load": "node scripts/load.js",

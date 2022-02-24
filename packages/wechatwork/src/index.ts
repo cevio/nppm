@@ -7,25 +7,40 @@ import { Service } from './service';
 
 const namespace: string = require('../package.json').name;
 
-export default async function WechatWorkApplication(npmcore: NPMCore) {
+export default function WechatWorkApplication(npmcore: NPMCore) {
   ConfigCacheAble.redis = npmcore.redis.value;
-  const tryAgain = new HttpAcceptedException();
-  tryAgain.set('retry-after', '3');
 
-  const createLoginURL = async (session: string) => {
+  const removeService = npmcore.http.value.createService(Service);
+  const loginModule = npmcore.createLoginModule(namespace);
+
+  loginModule.addLoginURL(createLoginURL(npmcore)).addDoneUrl(createDoneURL(npmcore));
+  npmcore.addLoginModule(loginModule);
+  
+  return () => {
+    removeService();
+    npmcore.removeLoginModule(loginModule);
+  }
+}
+
+
+function createLoginURL(npmcore: NPMCore) {
+  return async (session: string) => {
     const configs = await ConfigCacheAble.get(null, npmcore.orm.value);
-    const { appid, agentid } = npmcore.loadPluginState(namespace);
+    const { appid, agentid, expire } = npmcore.loadPluginState(namespace);
     const redirect_url = encodeURIComponent(resolve(configs.domain, '/~/v1/login/wechat/work/authorize'));
     const timer = setTimeout(() => {
-      if (stacks.has(session)) {
-        stacks.delete(session);
-      }
-    }, 5 * 60 * 1000);
+      if (stacks.has(session)) stacks.delete(session);
+    }, expire * 60 * 1000);
     stacks.set(session, { status: 0, data: null, msg: null, timer });
     return `https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=${appid}&agentid=${agentid}&redirect_uri=${redirect_url}&state=${session}`;
   }
+}
 
-  const createDoneURL = (session: string) => {
+function createDoneURL(npmcore: NPMCore) {
+  return async (session: string) => {
+    const { retryAfter } = npmcore.loadPluginState(namespace);
+    const tryAgain = new HttpAcceptedException();
+    tryAgain.set('retry-after', retryAfter + '');
     if (!stacks.has(session)) throw tryAgain;
     const state = stacks.get(session);
     switch (state.status) {
@@ -39,14 +54,5 @@ export default async function WechatWorkApplication(npmcore: NPMCore) {
         throw new HttpServiceUnavailableException(state.msg);
       default: throw tryAgain;
     }
-  }
-
-  const loginModule = npmcore.createLoginModule(namespace);
-  loginModule.addLoginURL(createLoginURL).addDoneUrl(createDoneURL);
-  npmcore.addLoginModule(loginModule);
-  const removeService = npmcore.http.value.createService(Service);
-  return () => {
-    removeService();
-    npmcore.removeLoginModule(loginModule);
   }
 }

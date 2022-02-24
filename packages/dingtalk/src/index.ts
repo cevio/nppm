@@ -12,7 +12,9 @@ export default async function DingTalkApplication(npmcore: NPMCore) {
   const configs = await ConfigCacheAble.get(null, npmcore.orm.value);
   const tryAgain = new HttpAcceptedException();
   tryAgain.set('retry-after', '3');
-  const login = npmcore.addLoginModule(npmcore.createLoginModule(namespace).addLoginURL(session => {
+
+  const createLoginURL = async (session: string) => {
+    const configs = await ConfigCacheAble.get(null, npmcore.orm.value);
     const redirect_url = encodeURIComponent(resolve(configs.domain, '/~/v1/login/dingtalk/authorize'));
     const timer = setTimeout(() => {
       if (stacks.has(session)) {
@@ -21,7 +23,9 @@ export default async function DingTalkApplication(npmcore: NPMCore) {
     }, 5 * 60 * 1000);
     stacks.set(session, { status: 0, data: null, msg: null, timer });
     return `https://oapi.dingtalk.com/connect/qrconnect?appid=${appid}&response_type=code&scope=snsapi_login&state=${session}&redirect_uri=${redirect_url}`;
-  }).addDoneUrl(session => {
+  }
+
+  const createDoneURL = (session: string) => {
     if (!stacks.has(session)) throw tryAgain;
     const state = stacks.get(session);
     switch (state.status) {
@@ -35,10 +39,15 @@ export default async function DingTalkApplication(npmcore: NPMCore) {
         throw new HttpServiceUnavailableException(state.msg);
       default: throw tryAgain;
     }
-  }));
+  }
+
   const removeService = npmcore.http.value.createService(Service);
+  const loginModule = npmcore.createLoginModule(namespace);
+  loginModule.addLoginURL(createLoginURL).addDoneUrl(createDoneURL);
+  npmcore.addLoginModule(loginModule);
+
   return () => {
     removeService();
-    npmcore.removeLoginModule(login);
+    npmcore.removeLoginModule(loginModule);
   }
 }

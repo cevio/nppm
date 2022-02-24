@@ -1,17 +1,18 @@
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { stacks } from './state';
-import { TAccessToken, TOpenID, TUser } from './interface';
+import { TOpenID, TUser } from './interface';
 import axios, { AxiosResponse } from 'axios';
 import { HTTPController, HTTPRouter, HTTPRequestQuery } from '@typeservice/http';
 import { HttpServiceUnavailableException } from '@typeservice/exception';
+import { MD5 } from 'crypto-js';
+import { AccessTokenCacheAble } from './cache';
 
 const pkgname = require('../package.json').name;
 
 @HTTPController()
 export class Service {
   @inject('npmcore') private readonly npmcore: NPMCore;
-  private access_token: string;
 
   get connection() {
     return this.npmcore.orm.value;
@@ -29,26 +30,16 @@ export class Service {
     @HTTPRequestQuery('code') code: string,
     @HTTPRequestQuery('state') state: string,
   ) {
-    this.npmcore.logger.info('code', code);
-    this.npmcore.logger.info('state', state);
     const { appid, agentsecret } = this.npmcore.loadPluginState(pkgname);
     const result = stacks.get(state);
-    const access_token = await this.getAccessToken(appid, agentsecret);
+    const access_token = await AccessTokenCacheAble.get({ id: appid, secret: agentsecret });
     result.status = 1;
     const { openid } = await this.getOpenID(code, access_token);
     result.status = 2;
     const user = await this.getUserInfo(access_token, openid);
-    result.data = Object.assign(user, { token: openid });
+    result.data = Object.assign(user, { token: MD5('wxw_' + openid).toString() });
     result.status = 3;
     throw await this.npmcore.setLoginAuthorize(state);
-  }
-
-  private async getAccessToken(appid: string, appsecret: string) {
-    const res = await axios.get<any, AxiosResponse<TAccessToken>>(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${appid}&corpsecret=${appsecret}`);
-    const data = res.data;
-    if (data.errcode > 0) throw new HttpServiceUnavailableException(data.errmsg);
-    this.access_token = data.access_token;
-    return data.access_token;
   }
 
   private async getOpenID(code: string, access_token: string) {

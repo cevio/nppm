@@ -29,13 +29,15 @@
     "@nppm/cache": "^1.0.7",
     "@nppm/core": "^1.0.12",
     "@nppm/utils": "^1.0.7",
-    "axios": "^0.25.0"
+    "@types/crypto-js": "^4.1.1",
+    "axios": "^0.25.0",
+    "crypto-js": "^4.1.1"
   },
   "plugin_configs": [
     {
       "type": "input",
       "key": "appid",
-      "value": "ww70b4e70160e2b7e9",
+      "value": null,
       "placeholder": "企业微信的CorpID，在企业微信管理端查看",
       "title": "AppID / CorpID",
       "width": "100%",
@@ -44,7 +46,7 @@
     {
       "type": "input",
       "key": "agentid",
-      "value": "1000018",
+      "value": null,
       "placeholder": "授权方的网页应用ID，在具体的网页应用中查看",
       "title": "AgentID",
       "width": "100%",
@@ -53,11 +55,31 @@
     {
       "type": "input",
       "key": "agentsecret",
-      "value": "L2BDu0ZMS52yc4D28a8EgSNqxM3tR_nIWH238a4g8C8",
+      "value": null,
       "placeholder": "授权方的网页应用Secret，在具体的网页应用中查看",
       "title": "AgentSecret",
       "width": "100%",
       "description": "路径：企业微信后台 / 应用管理 / 自建 / 选择您的应用 / Secret"
+    },
+    {
+      "type": "input",
+      "mode": "number",
+      "key": "expire",
+      "value": 5,
+      "default": 5,
+      "placeholder": "登录有效时间（分钟）",
+      "title": "Login Expire Time",
+      "description": "每次登录自动失效时间，以分钟为单位计。如果用户长时间未登录且超过这个时间，系统自动判断为这次登录失效。"
+    },
+    {
+      "type": "input",
+      "mode": "number",
+      "key": "retryAfter",
+      "value": 3,
+      "default": 3,
+      "placeholder": "心跳间隔（秒）",
+      "title": "NPM Login Checker By Heartbeat",
+      "description": "NPM第三方登录机制，具备一个心跳检测机制，通过一定的时间间隔来判断用户的登录状态。这里以秒计，表示N秒后进行下一次心跳检测。"
     }
   ]
 }
