@@ -1,0 +1,63 @@
+{
+  "name": "@nppm/wechatwork",
+  "version": "1.0.0",
+  "description": "企业微信是腾讯微信团队打造的企业通讯与办公工具，具有与微信一致的沟通体验，丰富的OA应用，和连接微信生态的能力，可帮助企业连接内部、连接生态伙伴、连接消费者。专业协作、安全管理、人即服务。企业微信已覆盖零售、教育、金融、制造业、互联网、医疗等50多个行业，正持续向各行各业输出智慧解决方案。",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/wechatwork",
+  "plugin_name": "企业微信登录",
+  "plugin_icon": "https://img1.baidu.com/it/u=919625205,3781214050&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "devmain": "src/index",
+  "nppm": true,
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nppm/cache": "^1.0.7",
+    "@nppm/core": "^1.0.11",
+    "@nppm/utils": "^1.0.7",
+    "axios": "^0.25.0"
+  },
+  "plugin_configs": [
+    {
+      "type": "input",
+      "key": "appid",
+      "value": "ww70b4e70160e2b7e9",
+      "placeholder": "企业微信的CorpID，在企业微信管理端查看",
+      "title": "AppID / CorpID",
+      "width": "100%",
+      "description": "路径：企业微信后台 / 我的企业 / 企业ID"
+    },
+    {
+      "type": "input",
+      "key": "agentid",
+      "value": "1000018",
+      "placeholder": "授权方的网页应用ID，在具体的网页应用中查看",
+      "title": "AgentID",
+      "width": "100%",
+      "description": "路径：企业微信后台 / 应用管理 / 自建 / 选择您的应用 / AgentId"
+    },
+    {
+      "type": "input",
+      "key": "agentsecret",
+      "value": "L2BDu0ZMS52yc4D28a8EgSNqxM3tR_nIWH238a4g8C8",
+      "placeholder": "授权方的网页应用Secret，在具体的网页应用中查看",
+      "title": "AgentSecret",
+      "width": "100%",
+      "description": "路径：企业微信后台 / 应用管理 / 自建 / 选择您的应用 / Secret"
+    }
+  ]
+}

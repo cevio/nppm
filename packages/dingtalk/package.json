@@ -44,17 +44,19 @@
       "type": "input",
       "key": "appkey",
       "value": "dingr6eh1fizaidjmhpk",
-      "placeholder": "请输入钉钉开放平台获取到的APPKEY",
-      "title": "App Key",
-      "width": "100%"
+      "placeholder": "应用凭证 - APPKEY",
+      "title": "AppKey",
+      "width": "100%",
+      "description": "作用于获取 AccessToken，请前往 钉钉开放平台 / 基础信息 / 应用信息 / 应用凭证 / AppKey 获得"
     },
     {
       "type": "input",
       "key": "appsecret",
       "value": "v1BQiOoONRDWP4xlN27BJQajXCU46sjfjgf6RaKnTBpDXrzKfIvLKkXQTxYUFUj8",
-      "placeholder": "请输入钉钉开放平台获取到的APPSECRET",
-      "title": "App Secret",
-      "width": "100%"
+      "placeholder": "应用凭证 - AppSecret",
+      "title": "AppSecret",
+      "width": "100%",
+      "description": "作用于获取 AccessToken，请前往 钉钉开放平台 / 基础信息 / 应用信息 / 应用凭证 / AppSecret 获得"
     },
     {
       "type": "input",

@@ -89,7 +89,7 @@ export class NPMCore {
         if (ORM_INSTALLED.value && REDIS_INSTALLED.value) {
           const dependencies = this.configs.value.dependencies;
           for (const key in dependencies) {
-            this.installApplication(key)
+            this.installApplication(key, dependencies[key].startsWith('file:'))
               .then(() => logger.info('已安装插件', key))
               .catch(e => logger.error(e));
           }
@@ -105,7 +105,7 @@ export class NPMCore {
     if (!existsSync(pkgfilename)) return;
     const pkg = require(pkgfilename) as TApplicationPackageJSONState;
     if (!pkg.nppm) return false;
-    const application = require(!isProduction ? resolve(dictionary, dev ? pkg.devmain : pkg.main) : dictionary);
+    const application = require(resolve(dictionary, dev ? pkg.devmain : pkg.main));
     const installer = (application.default || application) as TApplication;
     try {
       pkg._uninstall = await Promise.resolve(installer(this));
