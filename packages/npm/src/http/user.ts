@@ -182,6 +182,8 @@ export class HttpUserService {
       }, 'Basic');
     }
 
+    this.npmcore.emit('login', user);
+
     return {
       ok: true,
       id: 'org.couchdb.user:' + body.name,
@@ -252,6 +254,8 @@ export class HttpUserService {
       }, 'Bearer');
     }
 
+    this.npmcore.emit('login', user);
+
     if (redirect) {
       await this.setUserCookie(cookie, user, 'Bearer');
       throw new HttpMovedPermanentlyException(redirect);
@@ -272,7 +276,11 @@ export class HttpUserService {
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public whoami(@HTTPRequestState('user') user: UserEntity) {
     return {
-      username: user ? user.nickname : null,
+      username: !user 
+        ? null
+        : user.login_code === 'default'
+          ? user.account
+          : user.nickname + '(' + user.account + ')'
     }
   }
 
@@ -290,9 +298,12 @@ export class HttpUserService {
     if (token) {
       const key = 'npm:user:Bearer:' + token;
       if (await this.redis.exists(key)) {
+        const user = await this.redis.get(key);
         await this.redis.del(key);
+        this.npmcore.emit('logout', JSON.parse(user));
       }
     }
+    // this.npmcore.emit('logout', user);
     return {
       ok: true,
     }
@@ -348,6 +359,7 @@ export class HttpUserService {
     @HTTPCookie() cookie: TCookie,
   ) {
     if (await this.redis.exists(token)) {
+      const user = await this.redis.get(token);
       await this.redis.del(token);
       cookie.set(token, null, { 
         signed: true,
@@ -355,6 +367,7 @@ export class HttpUserService {
         maxAge: -1,
         expires: new Date(0),
       })
+      this.npmcore.emit('logout', JSON.parse(user));
       return;
     }
     throw new HttpForbiddenException('找不到退出用户');
@@ -468,7 +481,9 @@ export class HttpUserService {
     const User = this.connection.getRepository(UserEntity);
     let user = await User.findOne({ id: Number(uid) });
     if (!user) throw new HttpNotFoundException('找不到用户');
-    return await this.updateUser(user, { login_forbiden: body.value }, user.login_code === 'default' ? 'Basic' : 'Bearer');
+    const result = await this.updateUser(user, { login_forbiden: body.value }, user.login_code === 'default' ? 'Basic' : 'Bearer');
+    this.npmcore.emit('user:forbidden', user, body.value)
+    return result;
   }
 
   @HTTPRouter({
@@ -492,6 +507,7 @@ export class HttpUserService {
     if (await this.redis.exists(hash)) await this.redis.del(hash);
     await UserCountCacheAble.build(null, this.connection);
     await UserCacheAble.del({ id: user.id });
+    this.npmcore.emit('user:delete', user);
     return user;
   }
 

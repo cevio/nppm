@@ -151,6 +151,13 @@ export class HttpPackageService {
     // }), count] as const;
   }
 
+  /**
+   * 转让管理员
+   * @param id 
+   * @param user 
+   * @param body 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/packages/:id(\\d+)/transfer',
     methods: 'POST'
@@ -171,7 +178,9 @@ export class HttpPackageService {
     pack.uid = body.uid;
     pack.gmt_modified = new Date();
     await Packages.save(pack);
-    return await PackageCacheAble.build({ pkg: pack.pathname }, this.connection);
+    const result = await PackageCacheAble.build({ pkg: pack.pathname }, this.connection);
+    this.npmcore.emit('package:transfer', pack.pathname, body.uid, pack.uid);
+    return result;
   }
 
   @HTTPRouter({

@@ -74,8 +74,10 @@ export class HttpOwnerService {
         await this.HttpMaintainerService.removeOne(pack.id, removes[i], Maintainer);
       }
 
+      pack.maintainers = newMaintainerIds.length;
+      await Packages.save(pack);
       await PackageCacheAble.build({ pkg: pack.pathname }, runner.manager);
-
+      this.npmcore.emit('owner:update', pack, body.maintainers);
       return { ok: true }
     })
   }

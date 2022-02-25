@@ -69,7 +69,9 @@ export class HttpConfigsService {
     configs.dictionary = body.dictionary;
     configs.registerable = body.registerable;
     configs = await Configs.save(configs);
-    return await ConfigCacheAble.build(null, this.connection);
+    const result = await ConfigCacheAble.build(null, this.connection);
+    this.npmcore.emit('config:update', result);
+    return result;
   }
 
   @HTTPRouter({

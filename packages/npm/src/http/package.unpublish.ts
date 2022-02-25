@@ -119,6 +119,7 @@ export class HttpPackageUnPublishService {
       const file = await this.removeFilename(version.tarball);
       await this.redis.set('npm:tarball:' + pack.rev + ':' + version.rev, file);
       await PackageCacheAble.build({ pkg: pack.pathname }, runner.manager);
+      this.npmcore.emit('unpublish', pack, version);
       return { 
         ok: true,
         _id: `${pack.pathname}@${removeCode}`,
@@ -223,6 +224,8 @@ export class HttpPackageUnPublishService {
         const version = versions[i];
         await this.removeFilename(version.tarball);
       }
+
+      this.npmcore.emit('unpublish', pack);
 
       return { ok: true };
     })

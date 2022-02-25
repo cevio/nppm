@@ -68,6 +68,7 @@ export class HttpTagService {
       const vid = version.id;
       await this.createNewDistTag(pack.id, vid, tag, Tag);
       await PackageCacheAble.build({ pkg: pack.pathname }, runner.manager);
+      this.npmcore.emit('dist-tag:add', tag, vid);
       return { ok: true }
     })
   }
@@ -102,6 +103,7 @@ export class HttpTagService {
       if (!vid) throw new HttpUnprocessableEntityException('cannot find the version of namespace:' + tag);
       await Tag.delete({ pid: pack.id, vid, namespace: tag });
       await PackageCacheAble.build({ pkg: pack.pathname }, runner.manager);
+      this.npmcore.emit('dist-tag:delete', tag, vid);
       return { ok: true }
     })
   }

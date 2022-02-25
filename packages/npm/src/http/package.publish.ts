@@ -98,7 +98,12 @@ export class HttpPackagePublishService {
         gmt_create: new Date(), 
         gmt_modified: new Date() 
       });
+      pack.likes = 1;
+    } else {
+      pack.likes++;
     }
+    await Packages.save(pack);
+    this.npmcore.emit('star', pack);
     return {
       ok: true
     }
@@ -110,7 +115,12 @@ export class HttpPackagePublishService {
     if (!pack) throw new HttpUnprocessableEntityException('can not find package of ' + body._id);
     const Star = this.connection.getRepository(StarEntity);
     const star = await Star.findOne({ uid: user.id, pid: pack.id });
-    if (star) await Star.delete(star.id);
+    if (star) {
+      await Star.delete(star.id);
+      pack.likes--;
+      await Packages.save(pack);
+      this.npmcore.emit('unstar', pack);
+    }
     return {
       ok: true
     }
@@ -129,16 +139,18 @@ export class HttpPackagePublishService {
       maintainers.forEach(maintainer => uids.add(maintainer.uid));
       if (!uids.has(user.id)) throw new HttpUnprocessableEntityException('you are not one of maintainers or package admins');
 
+      const deprecates: VersionEntity[] = [];
       for (const key in body.versions) {
         if (body.versions[key].deprecated) {
           // @ts-ignore
           const rev = body.versions[key].rev || body.versions[key]._rev;
           const msg = body.versions[key].deprecated;
-          await this.HttpVersionService.updateDeprecated(rev, msg, Version);
+          deprecates.push(await this.HttpVersionService.updateDeprecated(rev, msg, Version));
         }
       }
 
       await PackageCacheAble.build({ pkg: pack.pathname }, runner.manager);
+      this.npmcore.emit('deprecate', pack, ...deprecates);
       return { ok: true };
     })
   }
@@ -243,6 +255,7 @@ export class HttpPackagePublishService {
       writeFileSync(file, tarballBuffer);
       rollbacks.push(() => unlinkSync(file));
       await PackageCacheAble.build({ pkg: pack.pathname }, runner.manager);
+      this.npmcore.emit('publish', pack);
       return {
         ok: true,
         rev: pack.rev,
@@ -296,6 +309,7 @@ export class HttpPackagePublishService {
     pack.scope = scope;
     pack.uid = uid;
     pack.versions = 1;
+    pack.likes = 0;
     return repository.save(pack);
   }
 }

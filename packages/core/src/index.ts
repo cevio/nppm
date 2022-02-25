@@ -4,6 +4,7 @@ import { ensureDirSync } from 'fs-extra';
 import { interfaces } from 'inversify';
 import { Configs } from './configs';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+import { EventEmitter } from 'events';
 import { Login } from './login';
 import { effect } from '@vue/reactivity';
 import { ConfigCacheAble } from '@nppm/cache';
@@ -38,7 +39,7 @@ let id = 1;
 export interface TPluginInstallInfomation {
   id: number,
   name: string,
-  status: -2 | -1 | 0 | 1 | 2,
+  status: -3 | -2 | -1 | 0 | 1 | 2,
   startTimeStamp: number,
   endTimeStamp: number,
   installedTimeStamp: number,
@@ -47,7 +48,7 @@ export interface TPluginInstallInfomation {
   process: ChildProcessWithoutNullStreams
 }
 
-export class NPMCore {
+export class NPMCore extends EventEmitter {
   public readonly orm = ORM_CONNECTION_CONTEXT;
   public readonly redis = REDIS_CONNECTION_CONTEXT;
   public readonly http = HTTP_APPLICATION_CONTEXT;
@@ -187,6 +188,21 @@ export class NPMCore {
     })
     state.process = ls;
     return state;
+  }
+
+  public cancelInstallPluginTask(id: number) {
+    const installer = Array.from(this.installers.values()).find(installer => installer.id === id);
+    if (!installer) throw new HttpNotFoundException('找不到插件');
+    if (installer.status < 0) throw new HttpNotAcceptableException('插件安装过程已结束，但已出现错误。');
+    if (installer.status === 2) throw new HttpNotAcceptableException('插件已安装完毕，不能取消安装。');
+    if (!installer.process) throw new HttpNotFoundException('找不到插件安装进程');
+    installer.process.kill('SIGTERM');
+    installer.status = -3;
+    installer.process = null;
+    installer.endTimeStamp = Date.now();
+    installer.installedTimeStamp = Date.now();
+    installer.error = '安装被取消';
+    installer.msg.push('安装被取消');
   }
 
   public createInstallHistoryDestroyServer() {

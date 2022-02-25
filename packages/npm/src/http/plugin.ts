@@ -1,6 +1,6 @@
 import { inject } from 'inversify';
-import { NPMCore, TPluginInstallInfomation } from '@nppm/core';
-import { HttpServiceUnavailableException, HttpNotFoundException } from '@typeservice/exception';
+import { NPMCore } from '@nppm/core';
+import { HttpServiceUnavailableException } from '@typeservice/exception';
 import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 
@@ -16,6 +16,10 @@ export class HttpPluginService {
     return this.npmcore.redis.value;
   }
 
+  /**
+   * 安装插件
+   * @param body 
+   */
   @HTTPRouter({
     pathname: '/~/plugin',
     methods: 'POST'
@@ -30,11 +34,14 @@ export class HttpPluginService {
     if (!suceess) throw new HttpServiceUnavailableException('安装插件失败');
   }
 
+  /**
+   * 插件安装历史
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/plugin/history',
     methods: 'GET'
   })
-  // /Users/evioshen/code/github/nppm/packages/dingtalk
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
@@ -45,6 +52,29 @@ export class HttpPluginService {
       .sort((a, b) => b.startTimeStamp - a.startTimeStamp);
   }
 
+  /**
+   * 取消插件安装
+   * @param id 
+   * @returns 
+   */
+  @HTTPRouter({
+    pathname: '/~/plugin/history/cancel/:id(\\d+)',
+    methods: 'DELETE'
+  })
+  // /Users/evioshen/code/github/nppm/packages/dingtalk
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  @HTTPRouterMiddleware(UserMustBeAdminMiddleware)
+  public cancelPlugin(@HTTPRequestParam('id') id: string) {
+    return this.npmcore.cancelInstallPluginTask(Number(id));
+  }
+
+  /**
+   * 卸载插件
+   * @param name 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/plugin/:pkg',
     methods: 'DELETE'
@@ -58,6 +88,10 @@ export class HttpPluginService {
     return this.npmcore.uninstall(name);
   }
 
+  /**
+   * 获取所有登录插件列表
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/plugin/logins',
     methods: 'GET'
@@ -66,6 +100,10 @@ export class HttpPluginService {
     return this.npmcore.getLogins();
   }
 
+  /**
+   * 获取所有插件
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/plugins',
     methods: 'GET'
@@ -78,6 +116,11 @@ export class HttpPluginService {
     return this.npmcore.getPlugins();
   }
 
+  /**
+   * 获取插件的配置数据
+   * @param name 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/plugin/:pkg/configs',
     methods: 'GET'
@@ -90,6 +133,12 @@ export class HttpPluginService {
     return this.npmcore.loadPluginConfigs(name);
   }
 
+  /**
+   * 更新插件的配置数据
+   * @param name 
+   * @param body 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/plugin/:pkg/configs',
     methods: 'PUT'

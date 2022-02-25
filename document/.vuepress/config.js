@@ -15,12 +15,14 @@ module.exports = {
       { text: '指南', link: '/guider' },
       { text: '配置', link: '/setting' },
       { text: '插件', link: '/plugin' },
+      { text: '事件', link: '/events' },
     ],
     sidebar: [
       '/',
       '/guider.md',
       '/setting.md',
       '/plugin.md',
+      '/events.md'
     ],
     // 假定是 GitHub. 同时也可以是一个完整的 GitLab URL
     repo: 'cevio/nppm',

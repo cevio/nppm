@@ -107,7 +107,7 @@ export class HttpVersionService {
     if (version.deprecated !== msg) {
       version.deprecated = msg;
       version.gmt_modified = new Date();
-      await Version.save(version);
+      return await Version.save(version);
     }
   }
 

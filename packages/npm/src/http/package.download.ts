@@ -46,6 +46,7 @@ export class HttpPackageDownloadService {
     const configs = await ConfigCacheAble.get(null, this.connection);
     const file = resolve(HOME, configs.dictionary || 'packages', version.tarball);
     await Download.insert({ vid: version.id, pid: version.pid, gmt_create: new Date() });
+    this.npmcore.emit('download', version);
     return createReadStream(file);
   }
 }

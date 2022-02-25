@@ -1,7 +1,7 @@
 ---
 sidebar: auto
 sidebarDepth: 3
-next: false
+next: ./events.md
 prev: ./setting.md
 ---
 

@@ -55,6 +55,13 @@ export class PackageEntity {
   public maintainers: number;
 
   @Column({
+    type: 'integer',
+    default: 0,
+    comment: '收藏数'
+  })
+  public likes: number;
+
+  @Column({
     type: 'bool',
     default: true,
     comment: '是否私有包'
