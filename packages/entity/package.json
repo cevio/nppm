@@ -1,6 +1,6 @@
 {
   "name": "@nppm/entity",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "node private package manager:entity",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/entity",
