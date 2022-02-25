@@ -49,6 +49,9 @@ export class HttpPackageService {
       version: string,
       size: number,
       downloads: number,
+      versions: number,
+      maintainers: number,
+      likes: number,
     }
 
     const Packages = this.connection.getRepository(PackageEntity);
@@ -65,6 +68,9 @@ export class HttpPackageService {
           .addSelect('version.code', 'version')
           .addSelect('version.attachment_size', 'size')
           .addSelect('COUNT(download.id)', 'downloads')
+          .addSelect('pack.versions', 'versions')
+          .addSelect('pack.maintainers', 'maintainers')
+          .addSelect('pack.likes', 'likes')
           .where('pack.uid=:uid', { uid: _uid })
           .andWhere('tag.vid=version.id')
           .andWhere(`tag.namespace='latest'`)
@@ -79,6 +85,9 @@ export class HttpPackageService {
           .addSelect('version.code', 'version')
           .addSelect('version.attachment_size', 'size')
           .addSelect('COUNT(download.id)', 'downloads')
+          .addSelect('pack.versions', 'versions')
+          .addSelect('pack.maintainers', 'maintainers')
+          .addSelect('pack.likes', 'likes')
           .where('maintainer.uid=:uid', { uid: _uid })
           .andWhere('tag.vid=version.id')
           .andWhere(`tag.namespace='latest'`)
@@ -88,13 +97,11 @@ export class HttpPackageService {
       builder = builder.andWhere('pack.pathname LIKE :keyword', { keyword: '%' + keyword + '%' });
     }
 
-    builder = builder.groupBy('1,2,3,4,5');
+    builder = builder.groupBy('1,2,3,4,5,6,7,8');
 
     const count = await builder.clone().getCount();
 
-    builder = builder.orderBy({ 'pack.gmt_modified': 'DESC' }).offset((_page - 1) * _size).limit(_size);
-
-    builder = builder.orderBy({ 'pack.gmt_modified': 'DESC' }).offset((_page - 1) * _size).limit(_size);
+    builder = builder.orderBy({ 'pack.likes': 'DESC', 'pack.gmt_modified': 'DESC' }).offset((_page - 1) * _size).limit(_size);
     return [
       (await builder.getRawMany()) as TPackage[],
       count,
@@ -159,7 +166,7 @@ export class HttpPackageService {
    * @returns 
    */
   @HTTPRouter({
-    pathname: '/~/packages/:id(\\d+)/transfer',
+    pathname: '/~/packages/:id/transfer',
     methods: 'POST'
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
@@ -170,10 +177,9 @@ export class HttpPackageService {
     @HTTPRequestState('user') user: UserEntity,
     @HTTPRequestBody() body: { uid: number }
   ) {
-    const pid = Number(id);
     const Packages = this.connection.getRepository(PackageEntity);
-    const pack = await Packages.findOne(pid);
-    if (!pack) throw new HttpNotFoundException('cannot find the package id of ' + pid);
+    const pack = await Packages.findOne({ pathname: id });
+    if (!pack) throw new HttpNotFoundException('cannot find the package id of ' + id);
     if (pack.uid !== user.id) throw new HttpForbiddenException('you are not the admin of this package');
     pack.uid = body.uid;
     pack.gmt_modified = new Date();
@@ -244,5 +250,27 @@ export class HttpPackageService {
     const html = result.data as string;
     const matchs = /window\.__context__ = ([^<]+?)<\/script>/.exec(html);
     if (matchs) return JSON.parse(matchs[1]);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/package/:pkg/entity',
+    methods: 'GET'
+  })
+  public async getPackageEntity(@HTTPRequestParam('pkg') pkg: string) {
+    const Packages = this.connection.getRepository(PackageEntity);
+    const pack = await Packages.findOne({ pathname: pkg });
+    if (!pack) throw new HttpNotFoundException('找不到模块');
+    const Maintainer = this.connection.getRepository(MaintainerEntity);
+    const result = await Maintainer.createQueryBuilder('maintainer')
+      .leftJoin(UserEntity, 'user', 'user.id=maintainer.uid')
+      .select('user.id', 'uid')
+      .addSelect('user.nickname', 'nickname')
+      .where('maintainer.pid=:pid', { pid: pack.id })
+      .getRawMany();
+    
+    return {
+      uid: pack.uid,
+      members: result,
+    };
   }
 }

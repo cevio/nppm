@@ -78,6 +78,7 @@ export class HttpStarService {
     const count = await Star.count({ pid: pack.id, uid: user.id });
     return {
       status: !!count,
+      count: pack.likes,
     }
   }
 }

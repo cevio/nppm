@@ -400,7 +400,7 @@ export class HttpUserService {
   }
 
   @HTTPRouter({
-    pathname: '/~/user/:id(\\d+)',
+    pathname: '/~/user/:id',
     methods: 'GET'
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
@@ -408,7 +408,7 @@ export class HttpUserService {
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
   public async getUserById(@HTTPRequestParam('id') uid: string) {
     const User = this.connection.getRepository(UserEntity);
-    const user = await User.findOne(Number(uid));
+    const user = await User.findOne({ account: uid });
     if (!user) throw new HttpNotFoundException('找不到用户');
     delete user.password;
     delete user.login_forbiden;
@@ -579,5 +579,16 @@ export class HttpUserService {
     return {
       ok: true,
     }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/likes',
+    methods: 'GET'
+  })
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
+  @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
+  private async getMyLikes() {
+
   }
 }
