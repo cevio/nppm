@@ -1,6 +1,7 @@
 import Registry from './registry';
 import { join } from 'path';
 import { spawn } from 'child_process';
+import { warn } from 'npmlog';
 
 const cwd = process.cwd();
 const npmBin = join(__dirname, '..', 'node_modules', '.bin', 'npm');
@@ -78,6 +79,7 @@ const commands = [
 ]
 
 export default function(command: string, rawArgs: string[] = []) {
+  warn('registry', 'execute', command, ...rawArgs);
   if (commands.includes(command)) {
     const registry = new Registry();
     const env = Object.assign({}, process.env);

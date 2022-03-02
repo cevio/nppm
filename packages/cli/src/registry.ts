@@ -45,25 +45,28 @@ export default class Registry {
 
   public query() {
     if (!this.configs.registry) {
-      return warn(this.heading, 'no registries, please use `npc r -t=a` to create a registry.');
+      return this.notice();
     }
     info(this.heading, this.configs.registry);
   }
 
   public async delete() {
     if (!this.configs.registries.length) {
-      return warn(this.heading, 'no registries, please use `npc r -t=a` to create a registry.');
+      return this.notice()
     }
+    const registries = this.configs.registries.slice(0);
+    registries.push('Exit');
     const questions = [
       {
         type: 'list',
         name: 'selected',
         message: 'Which reigstry do you want to delete?',
         default: this.configs.registry,
-        choices: this.configs.registries,
+        choices: registries,
       }
     ]
     const { selected } = await prompt<{ selected: string }>(questions);
+    if (selected === 'Exit') return;
     const index = this.configs.registries.indexOf(selected);
     if (index === -1) return error(this.heading, 'The registry is not exists.');
     this.configs.registries.splice(index, 1);
@@ -117,18 +120,21 @@ export default class Registry {
 
   public async change() {
     if (!this.configs.registries.length) {
-      return warn(this.heading, 'no registries, please use `npc r -t=a` to create a registry.');
+      return this.notice();
     }
+    const registries = this.configs.registries.slice(0);
+    registries.push('Exit');
     const questions = [
       {
         type: 'list',
         name: 'selected',
         message: 'Which reigstry do you want to use?',
         default: this.configs.registry || this.configs.registries[0],
-        choices: this.configs.registries,
+        choices: registries,
       }
     ]
     const { selected } = await prompt<{ selected: string }>(questions);
+    if (selected === 'Exit') return;
     this.configs.registry = selected;
     this.save();
     info(this.heading, '+ %s', selected);
@@ -145,5 +151,9 @@ export default class Registry {
       registry: null as string,
       registries: [] as string[],
     }
+  }
+
+  private notice() {
+    warn(this.heading, 'no registries, please use `npc r -t a` to create a registry.');
   }
 }
