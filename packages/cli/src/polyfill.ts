@@ -79,7 +79,7 @@ const commands = [
 ]
 
 export default function(command: string, rawArgs: string[] = []) {
-  warn('registry', 'execute', command, ...rawArgs);
+  warn('registry', 'execute %s %s', command, rawArgs.join(' '));
   if (commands.includes(command)) {
     const registry = new Registry();
     const env = Object.assign({}, process.env);
