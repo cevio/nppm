@@ -5,7 +5,7 @@ import { resolve } from 'url';
 import { ConfigCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestQuery } from '@typeservice/http';
 import { createNPMErrorCatchMiddleware, NpmCommanderLimit, OnlyRunInCommanderLineInterface } from '@nppm/utils';
-import { MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
+import { KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 
 @HTTPController()
 export class HttpPackageSearchService {
@@ -39,6 +39,31 @@ export class HttpPackageSearchService {
     };
   }
 
+  @HTTPRouter({
+    pathname: '/~/search',
+    methods: 'GET'
+  })
+  public async webSearch(
+    @HTTPRequestQuery('q') keyword: string,
+    @HTTPRequestQuery('o') offset: string,
+    @HTTPRequestQuery('s') size: string,
+    @HTTPRequestQuery('t') type: 'private' | 'public' = 'private',
+  ) {
+    if (!keyword) return [];
+    const _offset = Number(offset || 0);
+    const _size = Number(size || 15);
+    const searchParams = { text: keyword, from: _offset, size: _size };
+    switch (type) {
+      case 'private':
+        const result = await this.getFromDatebase(searchParams);
+        return result.map(res => ({ package: res }));
+      case 'public':
+        const remote = await axios.get('https://registry.npmjs.com/-/v1/search', { params: searchParams });
+        return remote.data.objects;
+      default: return [];
+    }
+  }
+
   private async getFromDatebase(query: { text: string | string[], from: number, size: number }) {
     const Packages = this.connection.getRepository(PackageEntity);
     const result = await Packages.createQueryBuilder('pack')
@@ -46,6 +71,7 @@ export class HttpPackageSearchService {
       .leftJoin(TagEntity, 'tag', 'tag.vid=version.id')
       .leftJoin(UserEntity, 'user', 'user.id=version.uid')
       .leftJoin(UserEntity, 'user2', 'user2.id=pack.uid')
+      .leftJoin(KeywordEntity, 'keyword', 'keyword.vid=version.id')
       .select('pack.pathname', 'name')
       .addSelect('pack.id', 'id')
       .addSelect('pack.scope', 'scope')
@@ -57,10 +83,12 @@ export class HttpPackageSearchService {
       .addSelect('version.info', 'info')
       .addSelect('user.account', 'publisherusername')
       .addSelect('user.email', 'publisheruseremail')
+      .addSelect('user.avatar', 'publisheruseravatar')
       .addSelect('user2.account', 'packuseraccount')
       .addSelect('user2.email', 'packuseremail')
       .addSelect('user2.nickname', 'packusernickname')
-      .where(`pack.pathname LIKE :keyword`, { keyword: '%' + query.text + '%' })
+      .addSelect('user2.avatar', 'packuseravatar')
+      .where(`(pack.pathname LIKE :keyword OR keyword.name LIKE :keyword)`, { keyword: '%' + query.text + '%' })
       .andWhere('tag.vid=version.id')
       .andWhere(`tag.namespace='latest'`)
       .orderBy({ 'pack.gmt_modified': 'DESC' })
@@ -83,11 +111,13 @@ export class HttpPackageSearchService {
       res.publisher = {
         email: res.publisheruseremail,
         username: res.publisherusername,
+        avatar: res.publisheruseravatar,
       }
       res.author = {
         name: res.packusernickname,
         email: res.packuseremail,
         username: res.packuseraccount,
+        avatar: res.packuseravatar,
       }
       res.maintainers = maintainers[res.id];
       res.pathname = res.name;

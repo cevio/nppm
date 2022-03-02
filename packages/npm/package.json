@@ -41,6 +41,7 @@
     "@types/ssri": "^7.1.1",
     "axios": "^0.25.0",
     "crypto-js": "^4.1.1",
+    "dayjs": "^1.10.8",
     "fs-extra": "^10.0.0",
     "gravatar": "^1.8.2",
     "koa-etag": "^4.0.0",

@@ -2,14 +2,15 @@ import { resolve } from 'path';
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { ConfigCacheAble } from '@nppm/cache';
-import { VersionEntity, DowloadEntity } from '@nppm/entity';
+import { VersionEntity, DowloadEntity, PackageEntity, TagEntity } from '@nppm/entity';
 import { createReadStream } from 'fs-extra';
-import { HttpNotFoundException } from '@typeservice/exception';
+import { HttpNotFoundException, HttpNotAcceptableException } from '@typeservice/exception';
 import { 
   HTTPController, 
   HTTPRouter, 
   HTTPRouterMiddleware, 
-  HTTPRequestParam 
+  HTTPRequestParam,
+  HTTPRequestQuery
 } from '@typeservice/http';
 import { 
   createNPMErrorCatchMiddleware, 
@@ -48,5 +49,53 @@ export class HttpPackageDownloadService {
     await Download.insert({ vid: version.id, pid: version.pid, gmt_create: new Date() });
     this.npmcore.emit('download', version);
     return createReadStream(file);
+  }
+
+  @HTTPRouter({
+    pathname: '/~/downloads/rank',
+    methods: 'GET'
+  })
+  public async starsRank(
+    @HTTPRequestQuery('page') page: string = '1',
+    @HTTPRequestQuery('size') size: string = '15',
+  ) {
+    type TPackage = {
+      name: string,
+      id: number,
+      description: string,
+      version: string,
+      size: number,
+      downloads: number,
+      versions: number,
+      maintainers: number,
+      likes: number,
+    }
+    const _page = Number(page);
+    const _size = Number(size);
+    if (!_page || _page <= 0) throw new HttpNotAcceptableException('page invalid');
+    if (!_size || _size <= 0) throw new HttpNotAcceptableException('size invalid');
+    const Packages = this.connection.getRepository(PackageEntity);
+    let builder = Packages.createQueryBuilder('pack')
+      .leftJoin(VersionEntity, 'version', 'version.pid=pack.id')
+      .leftJoin(TagEntity, 'tag', 'tag.vid=version.id')
+      .leftJoin(DowloadEntity, 'download', 'download.vid=version.id')
+      .select('pack.id', 'id')
+      .addSelect('pack.pathname', 'name')
+      .addSelect('version.description', 'description')
+      .addSelect('version.code', 'version')
+      .addSelect('version.attachment_size', 'size')
+      .addSelect('COUNT(download.id)', 'downloads')
+      .addSelect('pack.versions', 'versions')
+      .addSelect('pack.maintainers', 'maintainers')
+      .addSelect('pack.likes', 'likes')
+      .andWhere('tag.vid=version.id')
+      .andWhere(`tag.namespace='latest'`)
+    builder = builder.groupBy('id, name, description, version, size, versions, maintainers, likes');
+    const count = await builder.clone().getCount();
+    builder = builder.orderBy({ 'downloads': 'DESC', 'pack.gmt_modified': 'DESC' }).offset((_page - 1) * _size).limit(_size);
+    return [
+      (await builder.getRawMany()) as TPackage[],
+      count,
+    ] as const;
   }
 }

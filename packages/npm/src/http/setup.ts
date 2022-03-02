@@ -6,6 +6,8 @@ import { HttpNotAcceptableException, HttpNotFoundException } from '@typeservice/
 import { HTTPController, HTTPRouter, HTTPRequestBody, HTTPRouterMiddleware, HTTPRequestState } from '@typeservice/http';
 import { ORM_CONNECTION_CONTEXT, REDIS_CONNECTION_CONTEXT, TORMConfigs, TCreateRedisServerProps, UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware, UserMustBeAdminMiddleware } from '@nppm/utils';
 
+const version = require('../../package.json').version;
+
 @HTTPController()
 export class HttpSetupService {
   @inject('npmcore') private readonly npmcore: NPMCore;
@@ -27,11 +29,11 @@ export class HttpSetupService {
     methods: 'GET'
   })
   public async getWebsiteMode() {
-    if (!this.connection) return 1;
-    if (!this.redis) return 2;
+    if (!this.connection) return { mode: 1, version };
+    if (!this.redis) return { mode: 2, version };
     const count = await UserCountCacheAble.get(null, this.connection);
-    if (count === 0) return 3;
-    return 0;
+    if (count === 0) return { mode: 3, version };
+    return { mode: 0, version };
   }
 
   /**
@@ -58,7 +60,7 @@ export class HttpSetupService {
     methods: 'POST'
   })
   public async setORMState(@HTTPRequestBody() body: TORMConfigs) {
-    const mode = await this.getWebsiteMode();
+    const { mode } = await this.getWebsiteMode();
     if (mode !== 1) throw new HttpNotFoundException();
     return await this.setORMStateWithAdmin(body);
   }
@@ -118,7 +120,7 @@ export class HttpSetupService {
   })
   @HTTPRouterMiddleware(UserInfoMiddleware)
   public async setRedisState(@HTTPRequestBody() body: TCreateRedisServerProps) {
-    const mode = await this.getWebsiteMode();
+    const { mode } = await this.getWebsiteMode();
     if (mode !== 2) throw new HttpNotFoundException();
     return await this.setRedisStateWithAdmin(body);
   }

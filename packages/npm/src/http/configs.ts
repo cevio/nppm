@@ -1,9 +1,10 @@
+import * as dayjs from 'dayjs';
 import { inject } from 'inversify';
 import { ConfigCacheAble } from '@nppm/cache';
 import { NPMCore } from '@nppm/core';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestBody } from '@typeservice/http';
 import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
-import { ConfigEntity, PackageEntity, UserEntity, VersionEntity, DowloadEntity } from '@nppm/entity';
+import { ConfigEntity, PackageEntity, UserEntity, VersionEntity, DowloadEntity, StarEntity } from '@nppm/entity';
 import { HttpNotAcceptableException } from '@typeservice/exception';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
@@ -75,29 +76,6 @@ export class HttpConfigsService {
   }
 
   @HTTPRouter({
-    pathname: '/~/dashboard',
-    methods: 'GET'
-  })
-  public async dashboard() {
-    const User = this.connection.getRepository(UserEntity);
-    const Packages = this.connection.getRepository(PackageEntity);
-    const Version = this.connection.getRepository(VersionEntity);
-    const Download = this.connection.getRepository(DowloadEntity);
-    const [user, pack, version, downloads] = await Promise.all([
-      User.count(),
-      Packages.count(),
-      Version.count(),
-      Download.count(),
-    ])
-    return {
-      userCount: user,
-      packageCount: pack,
-      versionCount: version,
-      downloadCount: downloads,
-    }
-  }
-
-  @HTTPRouter({
     pathname: '/',
     methods: 'GET'
   })
@@ -105,5 +83,76 @@ export class HttpConfigsService {
     const e = new HttpOKException(readFileSync(resolve(__dirname, '../../theme/index.html')));
     e.set('content-type', 'text/html')
     throw e;
+  }
+
+  @HTTPRouter({
+    pathname: '/~/dashboard/users',
+    methods: 'GET'
+  })
+  public async dashboardUsers() {
+    const User = this.connection.getRepository(UserEntity);
+    const count = await User.count();
+    const seven = await User.createQueryBuilder('user')
+      .where('user.gmt_create>=:today', { 
+        today: dayjs(dayjs().add(-7, 'days').format('YYYY-MM-DD') + ' 00:00:00').toDate() 
+      })
+      .getCount();
+    return {
+      count, seven,
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/dashboard/packages',
+    methods: 'GET'
+  })
+  public async dashboardPackages() {
+    const Packages = this.connection.getRepository(PackageEntity);
+    const count = await Packages.count();
+    const seven = await Packages.createQueryBuilder('pack')
+      .leftJoin(VersionEntity, 'version', 'version.pid=pack.id')
+      .select('pack.id')
+      .where('version.gmt_modified>=:today', { 
+        today: dayjs(dayjs().add(-7, 'days').format('YYYY-MM-DD') + ' 00:00:00').toDate() 
+      })
+      .distinct(true)
+      .getCount();
+    return {
+      count, seven,
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/dashboard/stars',
+    methods: 'GET'
+  })
+  public async dashboardStars() {
+    const Star = this.connection.getRepository(StarEntity);
+    const count = await Star.count();
+    const seven = await Star.createQueryBuilder('star')
+      .where('star.gmt_create>=:today', { 
+        today: dayjs(dayjs().add(-7, 'days').format('YYYY-MM-DD') + ' 00:00:00').toDate() 
+      })
+      .getCount();
+    return {
+      count, seven,
+    }
+  }
+
+  @HTTPRouter({
+    pathname: '/~/dashboard/downloads',
+    methods: 'GET'
+  })
+  public async dashboardDowloads() {
+    const Download = this.connection.getRepository(DowloadEntity);
+    const count = await Download.count();
+    const seven = await Download.createQueryBuilder('download')
+      .where('download.gmt_create>=:today', { 
+        today: dayjs(dayjs().add(-7, 'days').format('YYYY-MM-DD') + ' 00:00:00').toDate() 
+      })
+      .getCount();
+    return {
+      count, seven,
+    }
   }
 }

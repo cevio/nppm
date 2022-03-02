@@ -88,16 +88,19 @@ export class HttpPackageService {
           .addSelect('pack.versions', 'versions')
           .addSelect('pack.maintainers', 'maintainers')
           .addSelect('pack.likes', 'likes')
+          .addSelect('pack.gmt_modified', 'gmt_modified')
           .where('maintainer.uid=:uid', { uid: _uid })
           .andWhere('tag.vid=version.id')
           .andWhere(`tag.namespace='latest'`)
           .distinct(true);
 
     if (keyword) {
-      builder = builder.andWhere('pack.pathname LIKE :keyword', { keyword: '%' + keyword + '%' });
+      builder = builder.andWhere('pack.pathname LIKE :keyword', { 
+        keyword: '%' + keyword + '%' 
+      });
     }
 
-    builder = builder.groupBy('1,2,3,4,5,6,7,8');
+    builder = builder.groupBy('id, name, description, version, size, versions, maintainers, likes');
 
     const count = await builder.clone().getCount();
 
@@ -106,56 +109,6 @@ export class HttpPackageService {
       (await builder.getRawMany()) as TPackage[],
       count,
     ] as const;
-
-    // const Packages = this.connection.getRepository(PackageEntity);
-    // const Tag = this.connection.getRepository(TagEntity);
-    // const builder = Packages.createQueryBuilder('pack')
-    //   .leftJoin(VersionEntity, 'version', 'version.pid=pack.id')
-    //   .leftJoin(DowloadEntity, 'download', 'download.vid=version.id')
-    //   .select('pack.pathname', 'name')
-    //   .addSelect('pack.id', 'id')
-    //   .addSelect('version.description', 'description')
-    //   .addSelect('pack.uid', 'auid')
-    //   .addSelect('COUNT(download.id)', 'downloads')
-    //   .where('version.uid=:uid', { uid: user.id })
-    //   .groupBy('1,2,3,4')
-    //   .distinct(true);
-    
-    // if (keyword) builder.andWhere('pack.pathname LIKE :keyword', { keyword: '%' + keyword + '%' });
-    // const count = await builder.clone().getCount();
-    // builder.offset((_page - 1) * _size).limit(_size);
-    // const packages: TPackage[] = await builder.getRawMany();
-
-    // const pids = packages.map(pack => pack.id);
-
-    // type TResult = {
-    //   id: number,
-    //   code: string,
-    //   size: number,
-    //   uid: number,
-    // }
-    
-    // const result: TResult[] = !packages.length ? [] : await Tag.createQueryBuilder('tag')
-    //   .leftJoin(VersionEntity, 'version', 'version.id=tag.vid')
-    //   .select('version.code', 'code')
-    //   .addSelect('tag.pid', 'id')
-    //   .addSelect('version.attachment_size', 'size')
-    //   .addSelect('version.uid', 'uid')
-    //   .where('tag.pid IN (:pids) AND tag.namespace=:namespace', { pids, namespace: 'latest' })
-    //   .getRawMany();
-    // const versions = new Map<number, { code: string, size: number, uid: number }>();
-    // result.forEach(res => versions.set(res.id, {
-    //   code: res.code,
-    //   size: res.size,
-    //   uid: res.uid
-    // }));
-    // return [packages.map(pack => {
-    //   pack.version = versions.get(pack.id).code;
-    //   pack.size = versions.get(pack.id).size;
-    //   pack.uid = versions.get(pack.id).uid;
-    //   pack.downloads = Number(pack.downloads);
-    //   return pack;
-    // }), count] as const;
   }
 
   /**
@@ -224,25 +177,34 @@ export class HttpPackageService {
   })
   public updateRecently(@HTTPRequestQuery('top') top: string) {
     const Packages = this.connection.getRepository(PackageEntity);
-    return Packages.createQueryBuilder('p')
-      .leftJoin(UserEntity, 'u', 'u.id=p.uid')
-      .select('p.id', 'id')
-      .addSelect('p.pathname', 'pathname')
-      .addSelect('u.nickname', 'nickname')
-      .addSelect('u.avatar', 'avatar')
-      .addSelect('p.versions', 'versions')
-      .addSelect('p.maintainers', 'maintainers')
-      .addSelect('p.gmt_modified', 'gmt_modified')
+    return Packages.createQueryBuilder('pack')
+      .leftJoin(VersionEntity, 'version', 'version.pid=pack.id')
+      .leftJoin(TagEntity, 'tag', 'tag.vid=version.id')
+      .leftJoin(DowloadEntity, 'download', 'download.vid=version.id')
+      .select('pack.id', 'id')
+      .addSelect('pack.pathname', 'name')
+      .addSelect('version.description', 'description')
+      .addSelect('version.code', 'version')
+      .addSelect('version.attachment_size', 'size')
+      .addSelect('COUNT(download.id)', 'downloads')
+      .addSelect('pack.versions', 'versions')
+      .addSelect('pack.maintainers', 'maintainers')
+      .addSelect('pack.likes', 'likes')
+      .addSelect('pack.gmt_modified', 'gmt_modified')
+      .addSelect('pack.gmt_create', 'gmt_create')
+      .andWhere('tag.vid=version.id')
+      .andWhere(`tag.namespace='latest'`)
+      .groupBy('id, name, description, version, size, versions, maintainers, likes')
       .orderBy({ 
-        'p.gmt_modified': 'DESC',
-        'p.gmt_create': 'DESC',
+        'pack.gmt_modified': 'DESC',
+        'pack.gmt_create': 'DESC',
       })
       .limit(Number(top || '10'))
       .getRawMany();
   }
 
   @HTTPRouter({
-    pathname: '/~/package/:pkg/npmjs',
+    pathname: '/~/package/:pkg/state',
     methods: 'GET'
   })
   public async getNPMContext(@HTTPRequestParam('pkg') pkg: string) {
