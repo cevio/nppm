@@ -27,6 +27,7 @@
   "dependencies": {
     "@types/inquirer": "^8.2.0",
     "@types/npmlog": "^4.1.4",
+    "axios": "^0.26.0",
     "commander": "^9.0.0",
     "inquirer": "^8.2.0",
     "npmlog": "^6.0.1"
