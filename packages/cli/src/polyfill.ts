@@ -1,7 +1,6 @@
 import Registry from './registry';
 import { join } from 'path';
 import { spawn } from 'child_process';
-import { warn } from 'npmlog';
 
 const cwd = process.cwd();
 const npmBin = join(__dirname, '..', 'node_modules', '.bin', 'npm');
@@ -83,22 +82,19 @@ export default function(e: any, options: { args: string[] }) {
   const rawArgs = options.args.slice(1);
   if (commands.includes(command)) {
     const registry = new Registry();
-    const env = Object.assign({}, process.env);
-    const stdio = [
-      process.stdin,
-      process.stdout,
-      process.stderr,
-    ];
+    const env = process.env;
   
     if (registry.configs.registry) {
       rawArgs.push('--registry=' + registry.configs.registry);
       rawArgs.push('--disturl=https://cdn.npmmirror.com/binaries/node');
     }
     
+    const argvs = [command].concat(rawArgs);
+
     return new Promise<void>((resolve, reject) => {
-      const childprocess = spawn(npmBin, rawArgs, { env, cwd, stdio });
+      const childprocess = spawn(npmBin, argvs, { env, cwd, stdio: 'inherit' });
       childprocess.on('exit', code => {
-        if (code == 0) return resolve();
+        if (code === 0) return resolve();
         return reject(new Error(`\`npm ${rawArgs.join(' ')}\` exit with code ${code}`));
       })
     });
