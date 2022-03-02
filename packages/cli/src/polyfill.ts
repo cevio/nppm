@@ -78,8 +78,9 @@ const commands = [
   'explain',
 ]
 
-export default function(command: string, rawArgs: string[] = []) {
-  warn('registry', 'execute %s %s', command, rawArgs.join(' '));
+export default function(e: any, options: { args: string[] }) {
+  const command = options.args[0];
+  const rawArgs = options.args.slice(1);
   if (commands.includes(command)) {
     const registry = new Registry();
     const env = Object.assign({}, process.env);
