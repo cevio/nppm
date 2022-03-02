@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { resolve, dirname } from 'path';
-import { existsSync, writeFileSync, readFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { info, error, warn } from 'npmlog';
 import { parse, resolve as resolveURL } from 'url';
 import { prompt } from 'inquirer';
@@ -100,8 +100,7 @@ export default class Registry {
       return error(this.heading, 'The registry of `' + value + '` has already exists.');
     }
     const npmDictionary = dirname(require.resolve('npm'));
-    const text = readFileSync(npmDictionary, 'utf8');
-    const { version } = JSON.parse(text);
+    const { version } = require(resolve(npmDictionary, 'package.json'));
     const { data: pkg } = await axios.get(resolveURL(value, '/npm'), {
       headers: {
         'user-agent': 'npm/' + version + ' nppm/cli/' + NPPMPackage.version,
