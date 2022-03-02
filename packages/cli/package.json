@@ -1,0 +1,34 @@
+{
+  "name": "@nppm/cli",
+  "version": "1.0.0",
+  "description": "node private package manager:cli",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/cli",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "npc": "dist/index.js"
+  },
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/inquirer": "^8.2.0",
+    "@types/npmlog": "^4.1.4",
+    "commander": "^9.0.0",
+    "inquirer": "^8.2.0",
+    "npmlog": "^6.0.1"
+  }
+}
