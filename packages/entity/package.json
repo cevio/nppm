@@ -27,7 +27,6 @@
     "mysql2": "*",
     "oracledb": "*",
     "pg": "*",
-    "sqlite3": "*",
     "typeorm": "^0.2.41"
   }
 }

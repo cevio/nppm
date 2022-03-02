@@ -24,7 +24,7 @@ prev: ./setting.md
 入口函数，需要将整个模块通过`export default`导出此函数才能生效。入口函数构造体类型如下：
 
 ```ts
-type EnterenceCallback = (npmcore: NPMCore, namespace: string) => Promise<() => Promise<void>>
+type EnterenceCallback = (npmcore: NPMCore) => Promise<() => Promise<void>>
 ```
 
 我们也兼容Promise模式与非Promise模式，入口函数返回的函数将呗作为生命周期的销毁阶段处理函数。
@@ -32,7 +32,7 @@ type EnterenceCallback = (npmcore: NPMCore, namespace: string) => Promise<() => 
 ```ts
 // index.ts
 import { NPMCore } from '@nppm/core';
-export default async function DemoApplication(npmcore: NPMCore, namespace: string) {
+export default async function DemoApplication(npmcore: NPMCore) {
   // namespace: 当前插件名
   // 插件启动代码
   return async () => {
@@ -130,7 +130,7 @@ export class DEMOService {
 // index.ts
 import { NPMCore } from '@nppm/core';
 import { DEMOService } from './test.service';
-export default async function DemoApplication(npmcore: NPMCore, namespace: string) {
+export default async function DemoApplication(npmcore: NPMCore) {
   const unRegister = npmcore.http.value.createService(DEMOService);
 }
 ```
@@ -141,7 +141,7 @@ export default async function DemoApplication(npmcore: NPMCore, namespace: strin
 // index.ts
 import { NPMCore } from '@nppm/core';
 import { DEMOService } from './test.service';
-export default async function DemoApplication(npmcore: NPMCore, namespace: string) {
+export default async function DemoApplication(npmcore: NPMCore) {
   const unRegister = npmcore.http.value.createService(DEMOService);
   return async () => {
     unRegister();
