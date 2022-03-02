@@ -1,10 +1,10 @@
 import Registry from './registry';
-import { commands } from 'npm';
 
 const NPM = require('npm/lib/npm');
+const Commands = require('npm/lib/utils/cmd-list')
 
 export default function(command: string, rawArgs: string[] = []) {
-  if (Object.keys(commands).includes(command)) {
+  if (Commands.cmdList.includes(command)) {
     const npm = new NPM();
     const registry = new Registry();
   
