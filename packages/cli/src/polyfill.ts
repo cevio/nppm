@@ -10,7 +10,7 @@ export default function(command: string, rawArgs: string[] = []) {
   
     if (registry.configs.registry) {
       rawArgs.push('--registry=' + registry.configs.registry);
-      rawArgs.push('--disturl=https://registry.npmmirror.com/-/binary/node');
+      rawArgs.push('--disturl=https://cdn.npmmirror.com/binaries/node');
     }
     
     return npm.exec(command, rawArgs);
