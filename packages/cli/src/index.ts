@@ -12,7 +12,6 @@ program
   .version(version);
 
 program.command('registry')
-  .alias('r')
   .description('Manage registry operations')
   .option('-t, --type [mode]', 'query delete edit registries.', 'q')
   .action(Registry.main);
