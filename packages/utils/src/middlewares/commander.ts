@@ -22,6 +22,7 @@ export async function OnlyRunInCommanderLineInterface(ctx: Context, next: Next) 
     if (ctx.request.body?._attachments && Object.keys(ctx.request.body._attachments).length) {
       ctx.header['npm-command'] = 'publish';
     }
+    await next();
   } else if (!isNpm) {
     throw new HttpNotAcceptableException('Not support api');
   } else {
