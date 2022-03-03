@@ -154,6 +154,6 @@ export default class Registry {
   }
 
   private notice() {
-    warn(this.heading, 'no registries, please use `npc r -t a` to create a registry.');
+    warn(this.heading, 'no registries, please use `npc registry -t a` to create a registry.');
   }
 }
