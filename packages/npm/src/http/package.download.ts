@@ -39,7 +39,7 @@ export class HttpPackageDownloadService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('install', 'docs'))
+  @HTTPRouterMiddleware(NpmCommanderLimit('install', 'docs', 'update'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   public async download(
     @HTTPRequestParam('rev') key: string,
