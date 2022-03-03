@@ -25,3 +25,11 @@ $ pm2 start nppm -- --port=3000 # 启动服务
 ```bash
 $ npm <command...> --registry=http://<host>:<port>
 ```
+
+## Cli support
+
+```bash
+$ npm i -g @nppm/cli
+```
+
+see more at `packages/cli`
