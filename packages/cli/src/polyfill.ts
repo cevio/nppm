@@ -1,6 +1,7 @@
 import Registry from './registry';
 import { join } from 'path';
 import { spawn } from 'child_process';
+import { error } from 'npmlog';
 
 const cwd = process.cwd();
 const npmBin = join(__dirname, '..', 'node_modules', '.bin', 'npm');
@@ -95,8 +96,8 @@ export default function(e: any, options: { args: string[] }) {
       const childprocess = spawn(npmBin, argvs, { env, cwd, stdio: 'inherit' });
       childprocess.on('exit', code => {
         if (code === 0) return resolve();
-        return reject(new Error(`\`npm ${rawArgs.join(' ')}\` exit with code ${code}`));
+        return reject(new Error(`\`npm ${argvs.join(' ')}\` exit with code ${code}`));
       })
-    });
+    }).catch(e => error('registry', e.message));
   }
 }

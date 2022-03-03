@@ -29,11 +29,11 @@ export class HttpVersionService {
     Version = Version || this.connection.getRepository(VersionEntity);
     const version = new VersionEntity();
     version.gmt_modified = new Date();
-    version.homepage = state.homepage;
+    version.homepage = state.homepage || '';
     version.integrity = state.dist.integrity;
-    version.license = state.license;
+    version.license = state.license || '';
     version.pid = pid;
-    version.readme = state.readme;
+    version.readme = state.readme || '';
     version.repository = state.repository || { type: null, url: null };
     version.rev = MD5(nanoid()).toString();
     version.shasum = state.dist.shasum;
@@ -43,7 +43,7 @@ export class HttpVersionService {
     version.attachment_type = attachment.content_type;
     version.code = state.version;
     version.deprecated = null;
-    version.description = state.description;
+    version.description = state.description || '';
     version.gmt_create = new Date();
     version.info = {
       keywords: state.keywords,
