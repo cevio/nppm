@@ -52,8 +52,10 @@ export class HttpUserService {
   }
 
   private async insertUser<T extends Omit<Partial<UserEntity>, 'id'>>(state: T, type: TLoginType) {
-    const configs = await ConfigCacheAble.get(null, this.connection);
-    if (!configs.registerable) throw new HttpForbiddenException('npm stop register');
+    if (type === 'Basic') {
+      const configs = await ConfigCacheAble.get(null, this.connection);
+      if (!configs.registerable) throw new HttpForbiddenException('npm stop register');
+    }
     const user = new UserEntity();
     return this.updateUser(user, state, type);
   }
@@ -86,6 +88,11 @@ export class HttpUserService {
     return await UserCacheAble.build({ id: user.id }, this.connection);
   }
 
+  /**
+   * 安装过程插入用户
+   * @param body 
+   * @returns 
+   */
   @HTTPRouter({
     pathname: '/~/user',
     methods: 'POST'

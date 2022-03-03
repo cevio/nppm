@@ -17,7 +17,8 @@ export interface TConfigs {
   login_code: string,
   registries: string[],
   dictionary: string,
-  registerable: boolean
+  registerable: boolean,
+  installable: boolean,
 }
 
 @HTTPController()
@@ -69,6 +70,7 @@ export class HttpConfigsService {
     configs.scopes = body.scopes;
     configs.dictionary = body.dictionary;
     configs.registerable = body.registerable;
+    configs.installable = body.installable;
     configs = await Configs.save(configs);
     const result = await ConfigCacheAble.build(null, this.connection);
     this.npmcore.emit('config:update', result);

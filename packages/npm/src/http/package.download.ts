@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { ConfigCacheAble } from '@nppm/cache';
-import { VersionEntity, DowloadEntity, PackageEntity, TagEntity } from '@nppm/entity';
+import { VersionEntity, DowloadEntity, PackageEntity, TagEntity, UserEntity } from '@nppm/entity';
 import { createReadStream } from 'fs-extra';
 import { HttpNotFoundException, HttpNotAcceptableException } from '@typeservice/exception';
 import { 
@@ -10,12 +10,14 @@ import {
   HTTPRouter, 
   HTTPRouterMiddleware, 
   HTTPRequestParam,
-  HTTPRequestQuery
+  HTTPRequestQuery,
+  HTTPRequestState,
 } from '@typeservice/http';
 import { 
   createNPMErrorCatchMiddleware, 
   NpmCommanderLimit, 
-  OnlyRunInCommanderLineInterface, 
+  OnlyRunInCommanderLineInterface,
+  UserInfoMiddleware, 
 } from '@nppm/utils';
 
 @HTTPController()
@@ -38,13 +40,21 @@ export class HttpPackageDownloadService {
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
   @HTTPRouterMiddleware(NpmCommanderLimit('install', 'docs'))
-  public async download(@HTTPRequestParam('rev') key: string) {
+  @HTTPRouterMiddleware(UserInfoMiddleware)
+  public async download(
+    @HTTPRequestParam('rev') key: string,
+    @HTTPRequestState('user') user: UserEntity,
+  ) {
+    const configs = await ConfigCacheAble.get(null, this.connection);
+    if (!configs.installable) {
+      if (!user) throw new HttpNotFoundException('不允许安装模块');
+      if (user.login_forbiden) throw new HttpNotFoundException('不允许安装模块');
+    }
     const Version = this.connection.getRepository(VersionEntity);
     const Download = this.connection.getRepository(DowloadEntity);
     const version = await Version.findOne({ rev: key });
     if (!version) throw new HttpNotFoundException();
     const HOME = this.npmcore.HOME;
-    const configs = await ConfigCacheAble.get(null, this.connection);
     const file = resolve(HOME, configs.dictionary || 'packages', version.tarball);
     await Download.insert({ vid: version.id, pid: version.pid, gmt_create: new Date() });
     this.npmcore.emit('download', version);

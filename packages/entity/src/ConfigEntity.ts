@@ -47,4 +47,11 @@ export class ConfigEntity {
     default: false
   })
   public registerable: boolean;
+
+  @Column({
+    type: 'bool',
+    comment: '是否开放安装模块',
+    default: true
+  })
+  public installable: boolean;
 }
