@@ -1,10 +1,8 @@
 import Registry from './registry';
-import { dirname } from 'path';
 import { spawn } from 'child_process';
 import { error } from 'npmlog';
 
 const cwd = process.cwd();
-const npmBin = require.resolve('npm');
 const commands = [
   'ci',
   'install-ci-test',
@@ -122,7 +120,7 @@ export default function(e: any, options: { args: string[] }) {
     const argvs = [command].concat(rawArgs);
 
     return new Promise<void>((resolve, reject) => {
-      const childprocess = spawn(npmBin, argvs, { env, cwd, stdio: 'inherit' });
+      const childprocess = spawn('npm', argvs, { env, cwd, stdio: 'inherit' });
       childprocess.on('exit', code => {
         if (code === 0) return resolve();
         return reject(new Error(`\`npm ${argvs.join(' ')}\` exit with code ${code}`));
