@@ -1,10 +1,10 @@
 import Registry from './registry';
-import { join } from 'path';
+import { dirname } from 'path';
 import { spawn } from 'child_process';
 import { error } from 'npmlog';
 
 const cwd = process.cwd();
-const npmBin = join(__dirname, '..', 'node_modules', '.bin', 'npm');
+const npmBin = require.resolve('npm');
 const commands = [
   'ci',
   'install-ci-test',
