@@ -102,11 +102,9 @@ export default class Registry {
     if (this.configs.registries.includes(value)) {
       return error(this.heading, 'The registry of `' + value + '` has already exists.');
     }
-    const npmDictionary = dirname(require.resolve('npm'));
-    const { version } = require(resolve(npmDictionary, 'package.json'));
     const { data: pkg } = await axios.get(resolveURL(value, '/npm'), {
       headers: {
-        'user-agent': 'npm/' + version + ' nppm/cli/' + NPPMPackage.version,
+        'user-agent': 'npm/7.18.1 nppm/cli/' + NPPMPackage.version,
       }
     })
     if (pkg.name !== 'npm' || !pkg._rev || !pkg.versions || !pkg['dist-tags'] || !!pkg.error) {
