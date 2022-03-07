@@ -4,7 +4,7 @@ import { NPMCore } from '@nppm/core';
 import { resolve } from 'url';
 import { ConfigCacheAble } from '@nppm/cache';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestQuery } from '@typeservice/http';
-import { createNPMErrorCatchMiddleware, NpmCommanderLimit, OnlyRunInCommanderLineInterface } from '@nppm/utils';
+import { createNPMErrorCatchMiddleware, OnlyRunInCommanderLineInterface } from '@nppm/utils';
 import { KeywordEntity, MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 
 @HTTPController()
@@ -25,7 +25,6 @@ export class HttpPackageSearchService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('search'))
   // https://registry.npmjs.com/-/v1/search?text=node-modules&size=2
   public async search(@HTTPRequestQuery() query: Record<'text' | 'size' | 'from' | 'quality' | 'popularity' | 'maintenance', string>) {
     const result = await this.getFromDatebase({ text: query.text, from: Number(query.from), size: Number(query.size) });

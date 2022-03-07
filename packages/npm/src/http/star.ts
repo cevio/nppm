@@ -6,7 +6,6 @@ import { HttpNotFoundException, HttpNotAcceptableException } from '@typeservice/
 import { DowloadEntity, PackageEntity, StarEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 import { 
   createNPMErrorCatchMiddleware, 
-  NpmCommanderLimit, 
   OnlyRunInCommanderLineInterface, 
   UserInfoMiddleware, 
   UserMustBeLoginedMiddleware, 
@@ -40,7 +39,6 @@ export class HttpStarService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('stars'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)

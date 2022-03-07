@@ -19,7 +19,6 @@ import {
 } from '@typeservice/http';
 import { 
   NPMSession, 
-  NpmCommanderLimit, 
   OnlyRunInCommanderLineInterface, 
   UserInfoMiddleware, 
   UserMustBeLoginedMiddleware, 
@@ -122,7 +121,6 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('adduser'))
   public async checkUserLoginType(
     @NPMSession() session: string,
     @HTTPRequestBody() body: { hostname: string }
@@ -149,7 +147,6 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('adduser'))
   public async createUserBasedLoginModule(
     @HTTPRequestBody() body: { 
       _id: string, 
@@ -277,7 +274,6 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('whoami'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
@@ -297,7 +293,6 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('logout'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
@@ -545,7 +540,6 @@ export class HttpUserService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('profile'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)

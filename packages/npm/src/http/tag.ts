@@ -5,7 +5,7 @@ import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestParam, HTT
 import { Repository } from 'typeorm';
 import { MaintainerEntity, PackageEntity, TagEntity, UserEntity, VersionEntity } from '@nppm/entity';
 import { HttpUnprocessableEntityException } from '@typeservice/exception';
-import { createNPMErrorCatchMiddleware, NpmCommanderLimit, OnlyRunInCommanderLineInterface, UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
+import { createNPMErrorCatchMiddleware, OnlyRunInCommanderLineInterface, UserInfoMiddleware, UserMustBeLoginedMiddleware, UserNotForbiddenMiddleware } from '@nppm/utils';
 import { HttpPackageFetchService } from './package.fetch';
 import { HttpMaintainerService } from './maintainer';
 import { HttpVersionService } from './version';
@@ -29,7 +29,6 @@ export class HttpTagService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('dist-tag'))
   public async getDistTags(@HTTPRequestParam('pkg') pkg: string) {
     const res = await this.HttpPackageFetchService.readPackage(pkg);
     return res['dist-tags'];
@@ -41,7 +40,6 @@ export class HttpTagService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('dist-tag'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)
@@ -79,7 +77,6 @@ export class HttpTagService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('dist-tag'))
   @HTTPRouterMiddleware(UserInfoMiddleware)
   @HTTPRouterMiddleware(UserMustBeLoginedMiddleware)
   @HTTPRouterMiddleware(UserNotForbiddenMiddleware)

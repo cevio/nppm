@@ -2,7 +2,7 @@ import { inject } from 'inversify';
 import { NPMCore } from '@nppm/core';
 import { In } from 'typeorm';
 import { HTTPController, HTTPRouter, HTTPRouterMiddleware, HTTPRequestParam } from '@typeservice/http';
-import { createNPMErrorCatchMiddleware, NpmCommanderLimit, OnlyRunInCommanderLineInterface } from '@nppm/utils';
+import { createNPMErrorCatchMiddleware, OnlyRunInCommanderLineInterface } from '@nppm/utils';
 import { MaintainerEntity, PackageEntity, UserEntity } from '@nppm/entity';
 import { HttpNotFoundException, HttpUnprocessableEntityException } from '@typeservice/exception';
 import type { TPackageMaintainerState } from './maintainer';
@@ -31,7 +31,6 @@ export class HttpOwnerService {
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
   @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
-  @HTTPRouterMiddleware(NpmCommanderLimit('owner'))
   public async getOwnerInfo(@HTTPRequestParam('name') name: string) {
     name = name.startsWith(':') ? name.substr(1) : name;
     const User = this.connection.getRepository(UserEntity);
