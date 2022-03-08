@@ -1,6 +1,6 @@
 {
   "name": "@nppm/npm",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "description": "node private package manager:npm",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/npm",
