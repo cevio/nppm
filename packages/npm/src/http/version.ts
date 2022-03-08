@@ -46,6 +46,7 @@ export class HttpVersionService {
     version.description = state.description || '';
     version.gmt_create = new Date();
     version.info = {
+      bin: state.bin,
       keywords: state.keywords,
       dist: state.dist,
       dependencies: state.dependencies,
@@ -146,6 +147,7 @@ export interface TPackageVersionState {
   readme?: string,
   readmeFilename?: string,
   repository?: any,
+  bin?: Record<string, string>,
   _id: string,
   _nodeVersion: string,
   _npmVersion: string,
