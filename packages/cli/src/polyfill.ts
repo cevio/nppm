@@ -1,6 +1,6 @@
 import Registry from './registry';
 import { spawn } from 'child_process';
-import { error } from 'npmlog';
+import { error, info } from 'npmlog';
 
 const cwd = process.cwd();
 const commands = [
@@ -120,6 +120,7 @@ export default function(e: any, options: { args: string[] }) {
     const argvs = [command].concat(rawArgs);
 
     return new Promise<void>((resolve, reject) => {
+      info('registry:' + registry.configs.registry, 'npm', ...options.args);
       const childprocess = spawn('npm', argvs, { env, cwd, stdio: 'inherit' });
       childprocess.on('exit', code => {
         if (code === 0) return resolve();
