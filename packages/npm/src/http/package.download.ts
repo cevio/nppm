@@ -37,7 +37,6 @@ export class HttpPackageDownloadService {
     methods: 'GET'
   })
   @HTTPRouterMiddleware(createNPMErrorCatchMiddleware)
-  @HTTPRouterMiddleware(OnlyRunInCommanderLineInterface)
   @HTTPRouterMiddleware(UserInfoMiddleware)
   public async download(
     @HTTPRequestParam('rev') key: string,
