@@ -38,7 +38,7 @@ export class HttpOwnerService {
     if (!user) throw new HttpNotFoundException();
     return {
       account: user.account,
-      name: user.nickname,
+      name: user.account,
       email: user.email,
       avatar: user.avatar,
     }
