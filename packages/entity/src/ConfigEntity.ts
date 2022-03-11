@@ -54,4 +54,10 @@ export class ConfigEntity {
     default: true
   })
   public installable: boolean;
+
+  @Column({
+    type: 'json',
+    comment: '在禁止开放安装模块选项下，IP白名单',
+  })
+  public ips: string[];
 }

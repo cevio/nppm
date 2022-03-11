@@ -98,6 +98,7 @@ export class HttpSetupService {
         _configs.dictionary = 'node_packages';
         _configs.registerable = true;
         _configs.installable = true;
+        _configs.ips = [];
         await ConfigRepository.save(_configs);
         if (user && user.admin) {
           await ConfigCacheAble.build(null, this.connection);

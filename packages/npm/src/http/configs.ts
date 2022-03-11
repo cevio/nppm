@@ -19,6 +19,7 @@ export interface TConfigs {
   dictionary: string,
   registerable: boolean,
   installable: boolean,
+  ips: string[],
 }
 
 @HTTPController()
@@ -71,6 +72,7 @@ export class HttpConfigsService {
     configs.dictionary = body.dictionary;
     configs.registerable = body.registerable;
     configs.installable = body.installable;
+    configs.ips = body.ips;
     configs = await Configs.save(configs);
     const result = await ConfigCacheAble.build(null, this.connection);
     this.npmcore.emit('config:update', result);

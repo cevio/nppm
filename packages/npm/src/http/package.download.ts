@@ -12,10 +12,10 @@ import {
   HTTPRequestParam,
   HTTPRequestQuery,
   HTTPRequestState,
+  HTTPRequestIP,
 } from '@typeservice/http';
 import { 
   createNPMErrorCatchMiddleware, 
-  OnlyRunInCommanderLineInterface,
   UserInfoMiddleware, 
 } from '@nppm/utils';
 
@@ -41,11 +41,14 @@ export class HttpPackageDownloadService {
   public async download(
     @HTTPRequestParam('rev') key: string,
     @HTTPRequestState('user') user: UserEntity,
+    @HTTPRequestIP() ip: string,
   ) {
     const configs = await ConfigCacheAble.get(null, this.connection);
     if (!configs.installable) {
-      if (!user) throw new HttpNotFoundException('不允许安装模块');
-      if (user.login_forbiden) throw new HttpNotFoundException('不允许安装模块');
+      const ips = configs.ips || [];
+      if ((!user || user.login_forbiden) && !ips.includes(ip)) {
+        throw new HttpNotFoundException(`不允许安装模块 或将当前服务器IP:[${ip}]添加到白名单`);
+      }
     }
     const Version = this.connection.getRepository(VersionEntity);
     const Download = this.connection.getRepository(DowloadEntity);
