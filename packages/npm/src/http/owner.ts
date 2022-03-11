@@ -60,7 +60,7 @@ export class HttpOwnerService {
         }
       })
 
-      if (users.length !== body.maintainers.length) throw new HttpUnprocessableEntityException('some user is not exists', users.map(user => user.account), body.maintainers.map(m => m.name));
+      if (users.length !== body.maintainers.length) throw new HttpUnprocessableEntityException('some user is not exists');
 
       const maintainers = await Maintainer.find({ pid: pack.id });
       const oldMaintainerIds = maintainers.map(maintainer => maintainer.uid);
