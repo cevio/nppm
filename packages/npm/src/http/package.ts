@@ -154,6 +154,7 @@ export class HttpPackageService {
     const Maintainer = this.connection.createQueryBuilder(MaintainerEntity, 'm')
       .leftJoin(UserEntity, 'u', 'u.id=m.uid')
       .select('u.nickname', 'name')
+      .addSelect('u.account', 'account')
       .addSelect('u.email', 'email')
       .addSelect('u.avatar', 'avatar')
       .where('m.pid=:pid', { pid: pack.id });
