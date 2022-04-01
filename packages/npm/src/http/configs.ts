@@ -7,7 +7,7 @@ import { UserInfoMiddleware, UserMustBeAdminMiddleware, UserMustBeLoginedMiddlew
 import { ConfigEntity, PackageEntity, UserEntity, VersionEntity, DowloadEntity, StarEntity } from '@nppm/entity';
 import { HttpNotAcceptableException } from '@typeservice/exception';
 import { resolve } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, renameSync, existsSync } from 'fs';
 import { HttpOKException } from '@typeservice/exception';
 import { performance } from 'perf_hooks';
 
@@ -65,6 +65,7 @@ export class HttpConfigsService {
     const Configs = this.connection.getRepository(ConfigEntity);
     let configs = await Configs.findOne();
     if (!configs) configs = new ConfigEntity();
+    const _dictionary = configs.dictionary || 'packages';
     configs.domain = body.domain;
     configs.login_code = body.login_code;
     configs.registries = body.registries;
@@ -76,6 +77,14 @@ export class HttpConfigsService {
     configs = await Configs.save(configs);
     const result = await ConfigCacheAble.build(null, this.connection);
     this.npmcore.emit('config:update', result);
+    if (_dictionary && body.dictionary && _dictionary !== body.dictionary) {
+      const HOME = this.npmcore.HOME;
+      const oldDir = resolve(HOME, _dictionary);
+      const newDir = resolve(HOME, body.dictionary);
+      if (existsSync(oldDir)) {
+        renameSync(oldDir, newDir);
+      }
+    }
     return result;
   }
 
@@ -113,16 +122,20 @@ export class HttpConfigsService {
   public async dashboardPackages() {
     const Packages = this.connection.getRepository(PackageEntity);
     const count = await Packages.count();
-    const seven = await Packages.createQueryBuilder('pack')
+    const obj = Packages.createQueryBuilder('pack')
       .leftJoin(VersionEntity, 'version', 'version.pid=pack.id')
       .select('pack.id')
       .where('version.gmt_modified>=:today', { 
         today: dayjs(dayjs().add(-7, 'days').format('YYYY-MM-DD') + ' 00:00:00').toDate() 
       })
-      .distinct(true)
-      .getCount();
+
+    const [versions, packages] = await Promise.all([
+      obj.clone().getCount(),
+      obj.clone().distinct(true).getCount(),
+    ])
+
     return {
-      count, seven,
+      count, versions, packages
     }
   }
 

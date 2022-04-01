@@ -28,8 +28,8 @@ export default function WechatWorkApplication(npmcore: NPMCore) {
 function createLoginURL(npmcore: NPMCore) {
   return async (session: string) => {
     const configs = await ConfigCacheAble.get(null, npmcore.orm.value);
-    const { appid, agentid, expire } = npmcore.loadPluginState(namespace);
-    const redirect_url = encodeURIComponent(resolve(configs.domain, '/~/v1/login/wechat/work/authorize'));
+    const { appid, agentid, expire, alias } = npmcore.loadPluginState(namespace);
+    const redirect_url = encodeURIComponent(resolve(alias || configs.domain, '/~/v1/login/wechat/work/authorize'));
     const timer = setTimeout(() => {
       if (stacks.has(session)) stacks.delete(session);
     }, Number(expire) * 60 * 1000);

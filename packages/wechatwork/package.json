@@ -36,6 +36,15 @@
   "plugin_configs": [
     {
       "type": "input",
+      "key": "alias",
+      "value": null,
+      "placeholder": "企业微信代理域名",
+      "title": "Alias Domain",
+      "width": "100%",
+      "description": "用来代理域名转发，以兼容企业内部自有企业微信登录功能。"
+    },
+    {
+      "type": "input",
       "key": "appid",
       "value": null,
       "placeholder": "企业微信的CorpID，在企业微信管理端查看",
