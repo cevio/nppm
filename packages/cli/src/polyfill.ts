@@ -113,25 +113,31 @@ export default function(e: any, options: { args: string[] }) {
   if (commands.includes(command)) {
     const registry = new Registry();
     const env = process.env;
+
+    const pnpmIndex = options.args.indexOf('--pnpm');
+    let bin = 'npm';
+    if (pnpmIndex > -1 && commandExistsSync('pnpm')) {
+      bin = 'pnpm';
+      options.args.splice(pnpmIndex, 1);
+    }
   
     if (registry.configs.registry) {
       rawArgs.push('--registry=' + registry.configs.registry);
-      rawArgs.push('--disturl=https://cdn.npmmirror.com/binaries/node');
+      if (bin === 'npm') {
+        rawArgs.push('--disturl=https://cdn.npmmirror.com/binaries/node');
+      }
+    }
+
+    if (bin === 'pnpm') {
+      const index = rawArgs.indexOf('--pnpm');
+      if (index > -1) {
+        rawArgs.splice(index, 1);
+      }
     }
     
     const argvs = [command].concat(rawArgs);
 
     return new Promise<void>((resolve, reject) => {
-      const pnpmIndex = options.args.indexOf('--pnpm');
-      let bin = 'npm';
-      if (pnpmIndex > -1 && commandExistsSync('pnpm')) {
-        bin = 'pnpm';
-        options.args.splice(pnpmIndex, 1);
-        const index = argvs.indexOf('--pnpm');
-        if (index > -1) {
-          argvs.splice(index, 1);
-        }
-      }
       info('registry:' + registry.configs.registry, chalk.gray(bin), chalk.gray(...options.args));
       const childprocess = spawn(bin, argvs, { env, cwd, stdio: 'inherit' });
       childprocess.on('exit', code => {
