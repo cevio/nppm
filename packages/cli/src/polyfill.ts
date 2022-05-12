@@ -3,6 +3,7 @@ import { spawn } from 'child_process';
 import { error, info } from 'npmlog';
 import commandExists from 'command-exists';
 
+const chalk = require('chalk');
 const cwd = process.cwd();
 const commands = [
   'ci',
@@ -121,24 +122,21 @@ export default function(e: any, options: { args: string[] }) {
     const argvs = [command].concat(rawArgs);
 
     return new Promise<void>((resolve, reject) => {
-      import('chalk').then(res => {
-        const chalk = res.default;
-        const pnpmIndex = options.args.indexOf('--pnpm');
-        let bin = 'npm';
-        if (pnpmIndex > -1 && commandExists.sync('pnpm')) {
-          bin = 'pnpm';
-          options.args.splice(pnpmIndex, 1);
-          const index = argvs.indexOf('--pnpm');
-          if (index > -1) {
-            argvs.splice(index, 1);
-          }
+      const pnpmIndex = options.args.indexOf('--pnpm');
+      let bin = 'npm';
+      if (pnpmIndex > -1 && commandExists.sync('pnpm')) {
+        bin = 'pnpm';
+        options.args.splice(pnpmIndex, 1);
+        const index = argvs.indexOf('--pnpm');
+        if (index > -1) {
+          argvs.splice(index, 1);
         }
-        info('registry:' + registry.configs.registry, chalk.gray(bin), chalk.gray(...options.args));
-        const childprocess = spawn(bin, argvs, { env, cwd, stdio: 'inherit' });
-        childprocess.on('exit', code => {
-          if (code === 0) return resolve();
-          return reject(new Error(`\`npm ${argvs.join(' ')}\` exit with code ${code}`));
-        })
+      }
+      info('registry:' + registry.configs.registry, chalk.gray(bin), chalk.gray(...options.args));
+      const childprocess = spawn(bin, argvs, { env, cwd, stdio: 'inherit' });
+      childprocess.on('exit', code => {
+        if (code === 0) return resolve();
+        return reject(new Error(`\`npm ${argvs.join(' ')}\` exit with code ${code}`));
       })
     }).catch(e => error('registry', e.message));
   }
