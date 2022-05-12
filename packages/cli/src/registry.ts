@@ -1,9 +1,10 @@
 import axios from 'axios';
-import { resolve, dirname } from 'path';
+import { resolve } from 'path';
 import { existsSync, writeFileSync } from 'fs';
 import { info, error, warn } from 'npmlog';
 import { parse, resolve as resolveURL } from 'url';
 import { prompt } from 'inquirer';
+import chalk from 'chalk';
 
 const NPPMPackage = require('../package.json');
 
@@ -135,7 +136,7 @@ export default class Registry {
     if (selected === 'Exit') return;
     this.configs.registry = selected;
     this.save();
-    info(this.heading, '+ %s', selected);
+    info(this.heading, '+ %s', chalk.gray(selected));
   }
 
   private save() {

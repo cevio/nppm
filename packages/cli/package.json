@@ -25,9 +25,12 @@
     "access": "public"
   },
   "dependencies": {
+    "@types/command-exists": "^1.2.0",
     "@types/inquirer": "^8.2.0",
     "@types/npmlog": "^4.1.4",
     "axios": "^0.26.0",
+    "chalk": "^5.0.1",
+    "command-exists": "^1.2.9",
     "commander": "^9.0.0",
     "inquirer": "^8.2.0",
     "npmlog": "^6.0.1"
