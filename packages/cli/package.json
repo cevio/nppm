@@ -1,6 +1,6 @@
 {
   "name": "@nppm/cli",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "node private package manager:cli",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/cli",
