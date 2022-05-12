@@ -4,7 +4,6 @@ import { existsSync, writeFileSync } from 'fs';
 import { info, error, warn } from 'npmlog';
 import { parse, resolve as resolveURL } from 'url';
 import { prompt } from 'inquirer';
-import chalk from 'chalk';
 
 const NPPMPackage = require('../package.json');
 
@@ -136,6 +135,7 @@ export default class Registry {
     if (selected === 'Exit') return;
     this.configs.registry = selected;
     this.save();
+    const chalk = (await import('chalk')).default;
     info(this.heading, '+ %s', chalk.gray(selected));
   }
 
