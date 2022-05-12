@@ -1,9 +1,9 @@
 import Registry from './registry';
 import { spawn } from 'child_process';
 import { error, info } from 'npmlog';
-import commandExists from 'command-exists';
 
 const chalk = require('chalk');
+const commandExistsSync = require('command-exists').sync;
 const cwd = process.cwd();
 const commands = [
   'ci',
@@ -124,7 +124,7 @@ export default function(e: any, options: { args: string[] }) {
     return new Promise<void>((resolve, reject) => {
       const pnpmIndex = options.args.indexOf('--pnpm');
       let bin = 'npm';
-      if (pnpmIndex > -1 && commandExists.sync('pnpm')) {
+      if (pnpmIndex > -1 && commandExistsSync('pnpm')) {
         bin = 'pnpm';
         options.args.splice(pnpmIndex, 1);
         const index = argvs.indexOf('--pnpm');
