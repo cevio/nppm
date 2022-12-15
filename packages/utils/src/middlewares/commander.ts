@@ -13,17 +13,21 @@ export function NpmCommanderLimit(...commanders: string[]) {
 }
 
 export async function OnlyRunInCommanderLineInterface(ctx: Context, next: Next) {
-  const useragent = ctx.header['user-agent'];
-  const isLerna = lernaRegexp.test(useragent);
-  const isNpm = npmRegexp.test(useragent);
-  if (isLerna) {
-    if (ctx.request.body?._attachments && Object.keys(ctx.request.body._attachments).length) {
-      ctx.header['npm-command'] = 'publish';
-    }
-    await next();
-  } else if (!isNpm) {
-    throw new HttpNotAcceptableException('Not support api:' + useragent);
-  } else {
-    await next();
+  // const useragent = ctx.header['user-agent'];
+  // const isLerna = lernaRegexp.test(useragent);
+  // const isNpm = npmRegexp.test(useragent);
+  if (ctx.request.body?._attachments && Object.keys(ctx.request.body._attachments).length) {
+    ctx.header['npm-command'] = 'publish';
   }
+  await next();
+  // if (isLerna) {
+  //   if (ctx.request.body?._attachments && Object.keys(ctx.request.body._attachments).length) {
+  //     ctx.header['npm-command'] = 'publish';
+  //   }
+  //   await next();
+  // } else if (!isNpm) {
+  //   throw new HttpNotAcceptableException('Not support api:' + useragent);
+  // } else {
+  //   await next();
+  // }
 }
