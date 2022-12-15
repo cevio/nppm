@@ -22,7 +22,7 @@ export async function OnlyRunInCommanderLineInterface(ctx: Context, next: Next) 
     }
     await next();
   } else if (!isNpm) {
-    throw new HttpNotAcceptableException('Not support api');
+    throw new HttpNotAcceptableException('Not support api:' + useragent);
   } else {
     await next();
   }
