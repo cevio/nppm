@@ -1,6 +1,6 @@
 {
   "name": "@nppm/utils",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "node private package manager:utils",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/utils",
